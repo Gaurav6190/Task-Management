@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = TaskManagement.Api.IntegrationTests
-build_property.ProjectDir = C:\Work\Tast_Management_System\Api\tests\TaskManagement.Api.IntegrationTests\
+build_property.ProjectDir = C:\Users\User\source\repos\Task-Management\Tast_Management_System\Api\tests\TaskManagement.Api.IntegrationTests\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
