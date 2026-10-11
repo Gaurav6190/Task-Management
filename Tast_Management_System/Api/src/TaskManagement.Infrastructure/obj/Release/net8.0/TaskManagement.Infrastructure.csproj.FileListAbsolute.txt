@@ -1,0 +1,17 @@
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\bin\Release\net8.0\TaskManagement.Infrastructure.deps.json
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\bin\Release\net8.0\TaskManagement.Infrastructure.dll
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\bin\Release\net8.0\TaskManagement.Infrastructure.pdb
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\bin\Release\net8.0\TaskManagement.Application.dll
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\bin\Release\net8.0\TaskManagement.Domain.dll
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\bin\Release\net8.0\TaskManagement.Application.pdb
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\bin\Release\net8.0\TaskManagement.Domain.pdb
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\obj\Release\net8.0\TaskManagement.Infrastructure.csproj.AssemblyReference.cache
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\obj\Release\net8.0\TaskManagement.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\obj\Release\net8.0\TaskManagement.Infrastructure.AssemblyInfoInputs.cache
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\obj\Release\net8.0\TaskManagement.Infrastructure.AssemblyInfo.cs
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\obj\Release\net8.0\TaskManagement.Infrastructure.csproj.CoreCompileInputs.cache
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\obj\Release\net8.0\TaskMana.BCA0E1A6.Up2Date
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\obj\Release\net8.0\TaskManagement.Infrastructure.dll
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\obj\Release\net8.0\refint\TaskManagement.Infrastructure.dll
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\obj\Release\net8.0\TaskManagement.Infrastructure.pdb
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Infrastructure\obj\Release\net8.0\ref\TaskManagement.Infrastructure.dll

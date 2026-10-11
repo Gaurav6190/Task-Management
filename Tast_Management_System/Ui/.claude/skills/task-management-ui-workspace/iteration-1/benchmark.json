@@ -1,0 +1,560 @@
+{
+  "metadata": {
+    "skill_name": "task-management-ui",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "claude-opus-5-5",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-10-11T11:01:54Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 12,
+        "failed": 0,
+        "total": 12,
+        "time_seconds": 267.0,
+        "tokens": 50366,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Vite + React + TypeScript project (vite, react, typescript deps; tsconfig; src/main.tsx)",
+          "passed": true,
+          "evidence": "vite=^8.3.0 react=^19.2.8 typescript=~6.0.2"
+        },
+        {
+          "text": "ESLint is the linter (eslint dep, eslint.config.*, lint script runs eslint, no oxlint)",
+          "passed": true,
+          "evidence": "eslint=^10.10.0 config=eslint.config.js lint=\"eslint .\" oxlint=absent"
+        },
+        {
+          "text": "npm run lint passes with no errors",
+          "passed": true,
+          "evidence": "> task-management-ui@0.0.0 lint | > eslint ."
+        },
+        {
+          "text": "npm run build (tsc -b + vite build) passes",
+          "passed": true,
+          "evidence": "computing gzip size... | dist/index.html                   0.46 kB \u00e2\u201d\u201a gzip:  0.30 kB | dist/assets/index-BbVG_ULK.css    3.64 kB \u00e2\u201d\u201a gzip:  1.24 kB | dist/assets/index-DvzF1HaZ.js   265.69 kB \u00e2\u201d\u201a gzip: 84.64 kB |  | \u00e2\u0153\u201c built in 317ms"
+        },
+        {
+          "text": "Username input uses type=\"email\"",
+          "passed": true,
+          "evidence": "src/pages/LoginPage.tsx"
+        },
+        {
+          "text": "Client-side email validation before submitting (pattern/validator in code)",
+          "passed": true,
+          "evidence": "src/auth/credentials.ts, src/pages/LoginPage.tsx"
+        },
+        {
+          "text": "Whitespace is stripped or trimmed from the username input",
+          "passed": true,
+          "evidence": "src/auth/credentials.ts"
+        },
+        {
+          "text": "Username limited to 256 characters (matches API validator)",
+          "passed": true,
+          "evidence": "src/auth/credentials.ts"
+        },
+        {
+          "text": "Login POSTs to /api/auth/login",
+          "passed": true,
+          "evidence": "src/api/authApi.ts"
+        },
+        {
+          "text": "Dev setup avoids the API CORS mismatch (Vite /api proxy, or https on :5173)",
+          "passed": true,
+          "evidence": "vite /api proxy"
+        },
+        {
+          "text": "Access token from the response is kept and sent as a Bearer header",
+          "passed": true,
+          "evidence": "accessToken in: src/api/authApi.ts, src/auth/session.ts; Bearer in: src/api/authApi.ts, src/api/httpClient.ts"
+        },
+        {
+          "text": "Handles 401 / invalid credentials with a message",
+          "passed": true,
+          "evidence": "src/api/authApi.ts, src/api/httpClient.ts, src/auth/AuthProvider.tsx, src/auth/loginErrors.ts"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 13,
+        "failed": 0,
+        "total": 13,
+        "time_seconds": 251.8,
+        "tokens": 48581,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Vite + React + TypeScript project (vite, react, typescript deps; tsconfig; src/main.tsx)",
+          "passed": true,
+          "evidence": "vite=^8.3.0 react=^19.2.8 typescript=~6.0.2"
+        },
+        {
+          "text": "ESLint is the linter (eslint dep, eslint.config.*, lint script runs eslint, no oxlint)",
+          "passed": true,
+          "evidence": "eslint=^10.10.0 config=eslint.config.js lint=\"eslint .\" oxlint=absent"
+        },
+        {
+          "text": "npm run lint passes with no errors",
+          "passed": true,
+          "evidence": "> task-management-ui@0.0.0 lint | > eslint ."
+        },
+        {
+          "text": "npm run build (tsc -b + vite build) passes",
+          "passed": true,
+          "evidence": "computing gzip size... | dist/index.html                   0.46 kB \u00e2\u201d\u201a gzip:  0.30 kB | dist/assets/index-BbVG_ULK.css    3.64 kB \u00e2\u201d\u201a gzip:  1.24 kB | dist/assets/index-DvzF1HaZ.js   265.69 kB \u00e2\u201d\u201a gzip: 84.64 kB |  | \u00e2\u0153\u201c built in 476ms"
+        },
+        {
+          "text": "Username input uses type=\"email\"",
+          "passed": true,
+          "evidence": "src/pages/LoginPage.tsx"
+        },
+        {
+          "text": "Client-side email validation before submitting (pattern/validator in code)",
+          "passed": true,
+          "evidence": "src/auth/credentials.ts, src/pages/LoginPage.tsx"
+        },
+        {
+          "text": "Whitespace is stripped or trimmed from the username input",
+          "passed": true,
+          "evidence": "src/auth/credentials.ts"
+        },
+        {
+          "text": "Username limited to 256 characters (matches API validator)",
+          "passed": true,
+          "evidence": "src/auth/credentials.ts"
+        },
+        {
+          "text": "Login POSTs to /api/auth/login",
+          "passed": true,
+          "evidence": "src/api/authApi.ts"
+        },
+        {
+          "text": "Dev setup avoids the API CORS mismatch (Vite /api proxy, or https on :5173)",
+          "passed": true,
+          "evidence": "vite /api proxy"
+        },
+        {
+          "text": "Access token from the response is kept and sent as a Bearer header",
+          "passed": true,
+          "evidence": "accessToken in: src/api/authApi.ts, src/auth/session.ts; Bearer in: src/api/authApi.ts, src/api/httpClient.ts"
+        },
+        {
+          "text": "Handles 401 / invalid credentials with a message",
+          "passed": true,
+          "evidence": "src/api/authApi.ts, src/api/httpClient.ts, src/auth/AuthProvider.tsx, src/auth/loginErrors.ts"
+        },
+        {
+          "text": "Has a /tasks page reached after login, with a logout button",
+          "passed": true,
+          "evidence": "tasks: src/App.tsx, src/pages/LoginPage.tsx; logout: src/auth/AuthContext.ts, src/auth/AuthProvider.tsx, src/pages/TasksPage.tsx"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 13,
+        "failed": 0,
+        "total": 13,
+        "time_seconds": 290.5,
+        "tokens": 58844,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Vite + React + TypeScript project (vite, react, typescript deps; tsconfig; src/main.tsx)",
+          "passed": true,
+          "evidence": "vite=^8.3.0 react=^19.2.8 typescript=~6.0.2"
+        },
+        {
+          "text": "ESLint is the linter (eslint dep, eslint.config.*, lint script runs eslint, no oxlint)",
+          "passed": true,
+          "evidence": "eslint=^10.10.0 config=eslint.config.js lint=\"eslint .\" oxlint=absent"
+        },
+        {
+          "text": "npm run lint passes with no errors",
+          "passed": true,
+          "evidence": "> task-management-ui@0.0.0 lint | > eslint ."
+        },
+        {
+          "text": "npm run build (tsc -b + vite build) passes",
+          "passed": true,
+          "evidence": "computing gzip size... | dist/index.html                   0.46 kB \u00e2\u201d\u201a gzip:  0.30 kB | dist/assets/index-CVN15ulJ.css    3.81 kB \u00e2\u201d\u201a gzip:  1.29 kB | dist/assets/index-j-7tKGpx.js   265.97 kB \u00e2\u201d\u201a gzip: 84.74 kB |  | \u00e2\u0153\u201c built in 314ms"
+        },
+        {
+          "text": "Username input uses type=\"email\"",
+          "passed": true,
+          "evidence": "src/pages/LoginPage.tsx"
+        },
+        {
+          "text": "Client-side email validation before submitting (pattern/validator in code)",
+          "passed": true,
+          "evidence": "src/auth/credentials.ts, src/pages/LoginPage.tsx"
+        },
+        {
+          "text": "Whitespace is stripped or trimmed from the username input",
+          "passed": true,
+          "evidence": "src/auth/credentials.ts"
+        },
+        {
+          "text": "Username limited to 256 characters (matches API validator)",
+          "passed": true,
+          "evidence": "src/auth/credentials.ts"
+        },
+        {
+          "text": "Login POSTs to /api/auth/login",
+          "passed": true,
+          "evidence": "src/api/authApi.ts"
+        },
+        {
+          "text": "Dev setup avoids the API CORS mismatch (Vite /api proxy, or https on :5173)",
+          "passed": true,
+          "evidence": "vite /api proxy"
+        },
+        {
+          "text": "Access token from the response is kept and sent as a Bearer header",
+          "passed": true,
+          "evidence": "accessToken in: src/api/authApi.ts, src/auth/session.ts; Bearer in: src/api/authApi.ts, src/api/httpClient.ts"
+        },
+        {
+          "text": "Handles 401 / invalid credentials with a message",
+          "passed": true,
+          "evidence": "src/api/authApi.ts, src/api/httpClient.ts, src/auth/AuthProvider.tsx, src/auth/loginErrors.ts"
+        },
+        {
+          "text": "Sign in button is disabled until both fields are valid",
+          "passed": true,
+          "evidence": "src/pages/LoginPage.tsx"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 12,
+        "failed": 0,
+        "total": 12,
+        "time_seconds": 484.7,
+        "tokens": 87295,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Vite + React + TypeScript project (vite, react, typescript deps; tsconfig; src/main.tsx)",
+          "passed": true,
+          "evidence": "vite=^8.3.0 react=^19.2.8 typescript=~6.0.2"
+        },
+        {
+          "text": "ESLint is the linter (eslint dep, eslint.config.*, lint script runs eslint, no oxlint)",
+          "passed": true,
+          "evidence": "eslint=^10.12.0 config=eslint.config.js lint=\"eslint .\" oxlint=absent"
+        },
+        {
+          "text": "npm run lint passes with no errors",
+          "passed": true,
+          "evidence": "> task-management-ui@0.0.0 lint | > eslint ."
+        },
+        {
+          "text": "npm run build (tsc -b + vite build) passes",
+          "passed": true,
+          "evidence": "computing gzip size... | dist/index.html                   0.46 kB \u00e2\u201d\u201a gzip:  0.30 kB | dist/assets/index-DJ-jjEEo.css    2.04 kB \u00e2\u201d\u201a gzip:  0.83 kB | dist/assets/index-CQkupOnh.js   223.69 kB \u00e2\u201d\u201a gzip: 70.17 kB |  | \u00e2\u0153\u201c built in 192ms"
+        },
+        {
+          "text": "Username input uses type=\"email\"",
+          "passed": true,
+          "evidence": "src/pages/LoginPage.tsx"
+        },
+        {
+          "text": "Client-side email validation before submitting (pattern/validator in code)",
+          "passed": true,
+          "evidence": "src/auth/validation.ts, src/pages/LoginPage.tsx"
+        },
+        {
+          "text": "Whitespace is stripped or trimmed from the username input",
+          "passed": true,
+          "evidence": "src/auth/validation.ts, src/pages/LoginPage.tsx"
+        },
+        {
+          "text": "Username limited to 256 characters (matches API validator)",
+          "passed": true,
+          "evidence": "src/api/auth.ts"
+        },
+        {
+          "text": "Login POSTs to /api/auth/login",
+          "passed": true,
+          "evidence": "src/api/auth.ts"
+        },
+        {
+          "text": "Dev setup avoids the API CORS mismatch (Vite /api proxy, or https on :5173)",
+          "passed": true,
+          "evidence": "https dev server on 5173"
+        },
+        {
+          "text": "Access token from the response is kept and sent as a Bearer header",
+          "passed": true,
+          "evidence": "accessToken in: src/api/auth.ts, src/api/client.ts, src/auth/session.ts; Bearer in: src/api/auth.ts, src/api/client.ts"
+        },
+        {
+          "text": "Handles 401 / invalid credentials with a message",
+          "passed": true,
+          "evidence": "src/api/auth.ts, src/api/client.ts, src/pages/LoginPage.tsx"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.92,
+        "passed": 12,
+        "failed": 1,
+        "total": 13,
+        "time_seconds": 472.3,
+        "tokens": 75719,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Vite + React + TypeScript project (vite, react, typescript deps; tsconfig; src/main.tsx)",
+          "passed": true,
+          "evidence": "vite=^8.3.0 react=^19.2.8 typescript=~6.0.2"
+        },
+        {
+          "text": "ESLint is the linter (eslint dep, eslint.config.*, lint script runs eslint, no oxlint)",
+          "passed": true,
+          "evidence": "eslint=^10.12.0 config=eslint.config.js lint=\"eslint .\" oxlint=absent"
+        },
+        {
+          "text": "npm run lint passes with no errors",
+          "passed": true,
+          "evidence": "> task-management-ui@0.0.0 lint | > eslint ."
+        },
+        {
+          "text": "npm run build (tsc -b + vite build) passes",
+          "passed": true,
+          "evidence": "computing gzip size... | dist/index.html                   0.46 kB \u00e2\u201d\u201a gzip:  0.29 kB | dist/assets/index-CWGyUrCH.css    2.43 kB \u00e2\u201d\u201a gzip:  0.96 kB | dist/assets/index-DlVnItv1.js   264.09 kB \u00e2\u201d\u201a gzip: 84.08 kB |  | \u00e2\u0153\u201c built in 220ms"
+        },
+        {
+          "text": "Username input uses type=\"email\"",
+          "passed": true,
+          "evidence": "src/pages/LoginPage.tsx"
+        },
+        {
+          "text": "Client-side email validation before submitting (pattern/validator in code)",
+          "passed": true,
+          "evidence": "src/auth/email.ts, src/pages/LoginPage.tsx"
+        },
+        {
+          "text": "Whitespace is stripped or trimmed from the username input",
+          "passed": true,
+          "evidence": "src/auth/email.ts"
+        },
+        {
+          "text": "Username limited to 256 characters (matches API validator)",
+          "passed": true,
+          "evidence": "src/auth/email.ts"
+        },
+        {
+          "text": "Login POSTs to /api/auth/login",
+          "passed": true,
+          "evidence": "src/api/auth.ts"
+        },
+        {
+          "text": "Dev setup avoids the API CORS mismatch (Vite /api proxy, or https on :5173)",
+          "passed": true,
+          "evidence": "https dev server on 5173"
+        },
+        {
+          "text": "Access token from the response is kept and sent as a Bearer header",
+          "passed": false,
+          "evidence": "accessToken in: src/api/auth.ts, src/auth/session.ts; Bearer in: -"
+        },
+        {
+          "text": "Handles 401 / invalid credentials with a message",
+          "passed": true,
+          "evidence": "src/api/client.ts"
+        },
+        {
+          "text": "Has a /tasks page reached after login, with a logout button",
+          "passed": true,
+          "evidence": "tasks: src/App.tsx, src/pages/LoginPage.tsx; logout: src/auth/AuthContext.ts, src/auth/AuthProvider.tsx, src/pages/TasksPage.tsx"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 13,
+        "failed": 0,
+        "total": 13,
+        "time_seconds": 420.0,
+        "tokens": 70425,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Vite + React + TypeScript project (vite, react, typescript deps; tsconfig; src/main.tsx)",
+          "passed": true,
+          "evidence": "vite=^8.3.0 react=^19.2.8 typescript=~6.0.2"
+        },
+        {
+          "text": "ESLint is the linter (eslint dep, eslint.config.*, lint script runs eslint, no oxlint)",
+          "passed": true,
+          "evidence": "eslint=^10.12.0 config=eslint.config.js lint=\"eslint .\" oxlint=absent"
+        },
+        {
+          "text": "npm run lint passes with no errors",
+          "passed": true,
+          "evidence": "> task-management-ui@0.0.0 lint | > eslint ."
+        },
+        {
+          "text": "npm run build (tsc -b + vite build) passes",
+          "passed": true,
+          "evidence": "computing gzip size... | dist/index.html                   0.47 kB \u00e2\u201d\u201a gzip:  0.31 kB | dist/assets/index-DIirWQnp.css    2.25 kB \u00e2\u201d\u201a gzip:  0.91 kB | dist/assets/index-B56Czm6P.js   224.12 kB \u00e2\u201d\u201a gzip: 70.34 kB |  | \u00e2\u0153\u201c built in 192ms"
+        },
+        {
+          "text": "Username input uses type=\"email\"",
+          "passed": true,
+          "evidence": "src/pages/LoginPage.tsx"
+        },
+        {
+          "text": "Client-side email validation before submitting (pattern/validator in code)",
+          "passed": true,
+          "evidence": "src/pages/LoginPage.tsx, src/pages/loginValidation.ts"
+        },
+        {
+          "text": "Whitespace is stripped or trimmed from the username input",
+          "passed": true,
+          "evidence": "src/pages/LoginPage.tsx, src/pages/loginValidation.ts"
+        },
+        {
+          "text": "Username limited to 256 characters (matches API validator)",
+          "passed": true,
+          "evidence": "src/pages/loginValidation.ts"
+        },
+        {
+          "text": "Login POSTs to /api/auth/login",
+          "passed": true,
+          "evidence": "src/api/auth.ts"
+        },
+        {
+          "text": "Dev setup avoids the API CORS mismatch (Vite /api proxy, or https on :5173)",
+          "passed": true,
+          "evidence": "vite /api proxy"
+        },
+        {
+          "text": "Access token from the response is kept and sent as a Bearer header",
+          "passed": true,
+          "evidence": "accessToken in: src/api/auth.ts, src/auth/session.ts; Bearer in: src/auth/session.ts"
+        },
+        {
+          "text": "Handles 401 / invalid credentials with a message",
+          "passed": true,
+          "evidence": "src/api/auth.ts, src/pages/LoginPage.tsx"
+        },
+        {
+          "text": "Sign in button is disabled until both fields are valid",
+          "passed": true,
+          "evidence": "src/pages/LoginPage.tsx"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1,
+        "max": 1
+      },
+      "time_seconds": {
+        "mean": 269.7667,
+        "stddev": 19.4978,
+        "min": 251.8,
+        "max": 290.5
+      },
+      "tokens": {
+        "mean": 52597.0,
+        "stddev": 5483.1846,
+        "min": 48581,
+        "max": 58844
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.9733,
+        "stddev": 0.0462,
+        "min": 0.92,
+        "max": 1
+      },
+      "time_seconds": {
+        "mean": 459.0,
+        "stddev": 34.3393,
+        "min": 420.0,
+        "max": 484.7
+      },
+      "tokens": {
+        "mean": 77813.0,
+        "stddev": 8627.7374,
+        "min": 70425,
+        "max": 87295
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.03",
+      "time_seconds": "-189.2",
+      "tokens": "-25216"
+    }
+  },
+  "notes": [
+    "Most checks don't discriminate: the no-skill runs read the API source and also got ESLint (swapping out Oxlint by hand), CORS handling, the 256-char limit and email validation right. The quality gap is small (100% vs 97%).",
+    "The main win is efficiency and consistency: with the skill, runs were ~41% faster (270s vs 459s) and used ~32% fewer tokens (53k vs 78k), with about a third of the tool calls (12-19 vs 35-48).",
+    "The no-skill runs diverged on CORS: 2 of 3 switched the dev server to HTTPS with @vitejs/plugin-basic-ssl (the user must accept a self-signed cert and trust the API's cert), and 1 used a Vite proxy. All the with-skill runs produce the same proxy setup, which needs no certificate steps.",
+    "Eval 2 without skill: the token is stored but never sent as an Authorization header (no API client helper for later task calls).",
+    "Eval 1 without skill: to stop its dev server it killed every node.exe running vite on the machine, which could have hit other runs. The skill tells the agent not to start a dev server at all.",
+    "Eval 3 (disabled Sign in button) shows the skill handles customisation: the agent layered the change on the template and re-ran lint and build."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+    "eval_id":  3,
+    "assertions":  [
+                       "Vite + React + TypeScript project (vite, react, typescript deps; tsconfig; src/main.tsx)",
+                       "ESLint is the linter (eslint dep, eslint.config.*, lint script runs eslint, no oxlint)",
+                       "npm run lint passes with no errors",
+                       "npm run build (tsc -b + vite build) passes",
+                       "Username input uses type=\"email\"",
+                       "Client-side email validation before submitting (pattern/validator in code)",
+                       "Whitespace is stripped or trimmed from the username input",
+                       "Username limited to 256 characters (matches API validator)",
+                       "Login POSTs to /api/auth/login",
+                       "Dev setup avoids the API CORS mismatch (Vite /api proxy, or https on :5173)",
+                       "Access token from the response is kept and sent as a Bearer header",
+                       "Handles 401 / invalid credentials with a message",
+                       "Sign in button is disabled until both fields are valid"
+                   ],
+    "prompt":  "Bootstrap the task management frontend (Vite, React, TS, ESLint) with the login page first - email-only username plus password, authenticating against the AuthController in C:\\Work\\Tast_Management_System\\Api. One extra requirement: keep the Sign in button disabled until both fields are valid.",
+    "eval_name":  "disabled-submit-variant"
+}

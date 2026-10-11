@@ -1,0 +1,71 @@
+@host = http://localhost:5008
+# Paste the id returned by "Create a task" (don't use a seed id: Delete would soft-delete sample data).
+@taskId = 00000000-0000-0000-0000-000000000000
+
+# Credentials are NOT stored in this repository (task.md D16).
+# 1. Configure your local test user once:  ./scripts/Set-DevAuthUser.ps1 -Username <email> -Password <password>
+# 2. Put the same values below before running "Login" (don't commit them).
+@username = your-test-user@example.com
+@password = your-test-password
+
+### Login (log in once; the token is reused by every request below for 60 minutes)
+# @name login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+###
+@token = {{login.response.body.$.accessToken}}
+
+### Create a task
+POST {{host}}/api/tasks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Write the API spec",
+  "description": "First draft of the endpoints",
+  "priority": "High",
+  "assignedTo": "alice",
+  "dueDateUtc": null
+}
+
+### List tasks (paged; optional status and priority filters)
+GET {{host}}/api/tasks?status=ToDo&priority=High&page=1&pageSize=20
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Task summary: counts grouped by status and priority (raw SQL), plus totals
+GET {{host}}/api/tasks/summary
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Get a task
+GET {{host}}/api/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Update a task (status: ToDo | InProgress | Done)
+PUT {{host}}/api/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Write the API spec (v2)",
+  "description": null,
+  "status": "InProgress",
+  "priority": "Medium",
+  "assignedTo": "bob",
+  "dueDateUtc": null
+}
+
+### Soft-delete a task (row stays in the database with IsDeleted = 1)
+DELETE {{host}}/api/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+
+### Without a token every task endpoint returns 401 Auth.Unauthorized
+GET {{host}}/api/tasks

@@ -1,0 +1,1622 @@
+
+> Act as an expert DevOps engineer. I need to Dockerize an application where
+  the Web API and UI live inside the same root folder.
+
+  Please provide the necessary Dockerfile(s) and a docker-compose.yml file
+  based on my tech stack. Also, provide short instructions on how to build and
+  run it in Readme.md file.
+
+  Here are my project details:
+  - Project folder structure: For API : C:\Work\Tast_Management_System\Api
+    Project folder structure: For UI: C:\Work\Tast_Management_System\Ui
+  - Web API language/framework:  .NET
+    -Web API framework:  .NET 8
+  - UI framework: React
+  - API port used locally: https://localhost:7213/
+  - UI port used locally: https://localhost:5173/
+  - Databases or other services needed: SQL server
+
+  Please give me a production-ready, optimized configuration using multi-stage
+  builds.
+
+● I'll start by inspecting the project structure so the configuration matches
+  your actual code.
+
+  Searched for 3 patterns, read 14 files, ran 4 shell commands (ctrl+o to expand)
+  ⎿  1 skill available
+  ⎿  1 skill available
+
+● Docker isn't installed on this machine, so I can write the files but can't
+  test-build them. Next I'll write the Dockerfiles, nginx config, compose file,
+  and README based on what's in the code.
+
+● Write(Api\Dockerfile)
+  ⎿  Wrote 56 lines to Api\Dockerfile
+       1 # syntax=docker/dockerfile:1.7
+       2 # TaskManagement.Api - multi-stage build. Build context: ./Api
+       3 #   target "final"    -> the Web API runtime image (default)
+         upgrades the database
+       5
+       6 ARG DOTNET_VERSION=8.0
+       7
+         s) ----------
+       9 FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS restore
+      10 WORKDIR /src
+     … +58 lines (ctrl+o to expand)
+
+● Write(Api\.dockerignore)
+  ⎿  Wrote 14 lines to Api\.dockerignore
+       1 **/bin/
+       2 **/obj/
+       3 **/.vs/
+       4 **/.vscode/
+       5 **/.idea/
+       6 **/*.user
+       7 **/TestResults/
+       8 **/coverage*/
+       9 .claude/
+      10 tests/
+     … +4 lines (ctrl+o to expand)
+
+● Write(Ui\Dockerfile)
+  ⎿  Wrote 30 lines to Ui\Dockerfile
+       1 # syntax=docker/dockerfile:1.7
+       2 # Task Management UI - multi-stage build. Build context: ./Ui
+       3
+         ---------
+       5 FROM node:24-alpine AS deps
+       6 WORKDIR /app
+       7 COPY package.json package-lock.json ./
+         fund
+       9
+      10 # ---------- build ----------
+     … +25 lines (ctrl+o to expand)
+
+● Write(Ui\.dockerignore)
+  ⎿  Wrote 9 lines to Ui\.dockerignore
+      1 node_modules/
+      2 dist/
+      3 .claude/
+      4 .vscode/
+      5 .idea/
+      6 *.log
+      7 .env*.local
+      8 Dockerfile
+      9 .dockerignore
+
+● Write(Ui\nginx\default.conf.template)
+  ⎿  Wrote 55 lines to Ui\nginx\default.conf.template
+      1 # Rendered at container start by the nginx image (envsubst): ${AP
+        I_UPSTREAM}, ${NGINX_RESOLVER}.
+      2 server {
+      3     listen 8080;
+      4     server_name _;
+      5     root /usr/share/nginx/html;
+      6     index index.html;
+      7
+      8     server_tokens off;
+      9     client_max_body_size 1m;
+     … +52 lines (ctrl+o to expand)
+
+● I'm removing the NuGet cache mounts from the API Dockerfile since packages in
+  a cache mount wouldn't persist in the image layer, risking failures on
+  --no-restore publish — normal layer caching handles this better.
+
+● Update(Api\Dockerfile)
+  ⎿  Added 1 line, removed 2 lines
+      14  COPY src/TaskManagement.Application/TaskManagement.Application.
+          csproj       src/TaskManagement.Application/
+      15  COPY src/TaskManagement.Infrastructure/TaskManagement.Infrastru
+          cture.csproj src/TaskManagement.Infrastructure/
+      16  COPY src/TaskManagement.Api/TaskManagement.Api.csproj          
+                       src/TaskManagement.Api/
+      17 -RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \ 
+      18 -    dotnet restore src/TaskManagement.Api/TaskManagement.Api.cs
+         -proj \                                                         
+      17 +RUN dotnet restore src/TaskManagement.Api/TaskManagement.Api.cs
+         +proj \                                                         
+      18   && dotnet tool restore
+      19  
+      20  # ---------- build & publish ----------
+
+● Update(Api\Dockerfile)
+  ⎿  Added 1 line, removed 2 lines
+      21  FROM restore AS publish
+      22  ARG BUILD_CONFIGURATION=Release
+      23  COPY src/ src/
+      24 -RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \ 
+      25 -    dotnet publish src/TaskManagement.Api/TaskManagement.Api.cs
+         -proj \                                                         
+      24 +RUN dotnet publish src/TaskManagement.Api/TaskManagement.Api.cs
+         +proj \                                                         
+      25          -c $BUILD_CONFIGURATION -o /app/publish --no-restore /p
+          :UseAppHost=false
+      26  
+      27  # ---------- EF Core migrations bundle ----------
+
+● Update(Api\Dockerfile)
+  ⎿  Added 1 line, removed 2 lines
+      26  
+      27  # ---------- EF Core migrations bundle ----------
+      28  FROM publish AS bundle
+      29 -RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \ 
+      30 -    dotnet ef migrations bundle \                              
+      29 +RUN dotnet ef migrations bundle \                              
+      30          --project src/TaskManagement.Infrastructure \
+      31          --startup-project src/TaskManagement.Api \
+      32          --configuration Release \
+
+● Now the compose file, the env template, and the README.
+
+● Write(docker-compose.yml)
+  ⎿  Wrote 89 lines to docker-compose.yml
+       1 # Task Management System: SQL Server + migrations + .NET 8 API +
+       2 # Usage: copy .env.example to .env, fill in the secrets, then `d
+         ocker compose up -d --build`.
+       4
+       6   ConnectionStrings__Default: "Server=sqlserver,1433;Database=${
+         DB_NAME:-TaskManagementDb};User Id=sa;Password=${MSSQL_SA_PASSWO
+         ultipleActiveResultSets=true;Application Name=TaskManagement.Api
+         "
+       8 services:
+      10     image: mcr.microsoft.com/mssql/server:2022-latest
+     … +92 lines (ctrl+o to expand)
+
+● Write(.env.example)
+  ⎿  Wrote 28 lines to .env.example
+       1 # Copy to .env and fill in. Never commit .env.
+       2
+       3 # SQL Server "sa" password: 8+ chars with upper, lower, digit an
+       4 MSSQL_SA_PASSWORD=
+       5 # Developer | Express | Standard | Enterprise (a paid edition ne
+         eds a licence)
+       6 MSSQL_PID=Developer
+       8 SQL_PORT=1433
+       9
+      10 # JWT signing key, at least 32 characters. Generate one with:
+     … +24 lines (ctrl+o to expand)
+
+● Update(.env.example)
+  ⎿  Added 1 line, removed 1 line
+       8  SQL_PORT=1433
+       9  
+      10  # JWT signing key, at least 32 characters. Generate one with:
+      11 -#   [Convert]::ToBase64String([Security.Cryptography.RandomNumb
+         -erGenerator]::GetBytes(64))                                    
+      11 +#   $b = New-Object byte[] 64; [Security.Cryptography.RandomNum
+         +berGenerator]::Create().GetBytes($b); [Convert]::ToBase64String
+         +($b)                                                           
+      12  JWT_SIGNING_KEY=
+      13  
+      14  # Production | Development (Development enables the temporary t
+          est login below)
+
+● Update(.env.example)
+  ⎿  Added 2 lines, removed 1 line
+       5  # Developer | Express | Standard | Enterprise (a paid edition n
+          eeds a licence)
+       6  MSSQL_PID=Developer
+       7  DB_NAME=TaskManagementDb
+       8 -SQL_PORT=1433                                                  
+       8 +# Host port for SQL tools (localhost only). Not 1433, so it doe
+         +sn't clash with a local SQL Server.                            
+       9 +SQL_PORT=14333                                                 
+      10  
+      11  # JWT signing key, at least 32 characters. Generate one with:
+      12  #   $b = New-Object byte[] 64; [Security.Cryptography.RandomNum
+          berGenerator]::Create().GetBytes($b); [Convert]::ToBase64String
+          ($b)
+
+● Update(docker-compose.yml)
+  ⎿  Added 1 line, removed 1 line
+      17        - sqlserver-data:/var/opt/mssql
+      18      ports:
+      19        # Bound to localhost only, for SSMS / Azure Data Studio. 
+          Remove to keep the DB fully private.
+      20 -      - "127.0.0.1:${SQL_PORT:-1433}:1433"                     
+      20 +      - "127.0.0.1:${SQL_PORT:-14333}:1433"                    
+      21      healthcheck:
+      22        test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S loc
+          alhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' -b -o 
+          /dev/null"]
+      23        interval: 10s
+
+● Write(README.md)
+  ⎿  Wrote 82 lines to README.md
+      1 # Task Management System: Docker
+      3 The whole stack runs with Docker Compose:
+      5 | Service     | Image / build             | Purpose
+                                                  | Exposed on
+      6 |-------------|---------------------------|----------------------
+        -------|
+        n the `sqlserver-data` volume)            | `127.0.0.1:14333` (to
+        ols only) |
+        igrations + seed data, then exits         | none
+      9 | `api`       | `Api/Dockerfile` → `final`| .NET 8 Web
+     … +109 lines (ctrl+o to expand)
+
+● Update(README.md)
+  ⎿  Added 1 line, removed 1 line
+      77  - **Database:** for production, use a managed SQL Server or Azu
+          re SQL. Point `ConnectionStrings__Default` at it with a
+      78    least-privilege login rather than `sa`, and remove the `sqlse
+          rver` service and its published port.
+      79  - **Secrets:** keep `.env` out of source control. In an orchest
+          rator, use its secret store (Docker/K8s secrets, Key Vault).
+      80 -- **Images:** tag releases with `TAG=1.2.3 docker compose build
+         -`, then push `task-management/*` to your registry.             
+      80 +- **Images:** tag releases with `$env:TAG = "1.2.3"; docker com
+         +pose build` (or set `TAG` in `.env`), then push `task-managemen
+         +t/*` to your registry.                                         
+      81  - **API on another domain:** if the UI and API aren't served fr
+          om the same origin, build the UI with
+      82    `VITE_API_BASE_URL=https://api.example.com` and add that UI o
+          rigin to the API's `Cors__AllowedOrigins__0`.
+● I've written the Docker setup, but I couldn't build or run any of it because
+  Docker isn't installed on this machine. The first docker compose up -d --build
+  will be its first real test.
+
+  Login is blocked by default. Your API only accepts the temporary test logins
+  (Auth:Users) when ASPNETCORE_ENVIRONMENT=Development. Outside Development it
+  clears that list on purpose (AuthSetup.cs:49-53
+  (Api/src/TaskManagement.Api/Infrastructure/AuthSetup.cs#L49-L53)). So with the
+  default Production setting, every login is rejected. The README explains how
+  to switch to Development and supply a test login through .env. A real
+  deployment needs a real user store instead.
+
+  Files:
+  - Api/Dockerfile: multi-stage build.
+    - Package restore is cached separately, so code-only changes don't
+      re-download packages.
+    - The runtime image is a minimal Microsoft image with no shell
+      (aspnet:8.0-noble-chiseled-extra). It runs as a non-root user on
+      port 8080.
+    - A separate migrator target packages your EF Core migrations into one
+      executable.
+  - Ui/Dockerfile: installs packages with npm ci on Node 24, runs the Vite
+    build, then serves the files from a non-root nginx image with a health
+    check.
+  - Ui/nginx/default.conf.template:
+    - Sends unknown routes to index.html so client-side routes work.
+    - Caches the hashed /assets/ files for a long time; index.html is never
+      cached.
+    - Adds gzip and security headers.
+    - Forwards /api to the API container, so the browser sees one origin and
+      CORS isn't needed.
+  - docker-compose.yml: four services.
+    - sqlserver has a health check and keeps its data in a volume.
+    - migrator updates the database and exits; the api only starts after it
+      succeeds.
+    - api has a read-only file system and isn't reachable from your host.
+    - ui is the only service you open in the browser.
+  - .env.example: the SA password, JWT signing key, environment, ports and image
+    tag. Copy it to .env.
+  - README.md: how to build, run and log in, plus production notes.
+  - .dockerignore files in Api and Ui.
+
+  Decisions to know about:
+  - Migrations: Program.cs (Api/src/TaskManagement.Api/Program.cs#L40-L48) only
+    migrates in Development, so in Production the database would stay empty. The
+    migrator service fills that gap and also applies your seed migration.
+  - HTTPS and ports: the containers use plain HTTP. In production, put a proxy
+    or load balancer in front to handle HTTPS. The app is at
+    http://localhost:8080, not your dev ports 5173 and 7213.
+  - SQL Server port: it's published as localhost:14333, not 1433, so it doesn't
+    clash with your local SQL Server.
+  - Database login: compose connects as sa, which is fine locally. For
+    production, use a database login with fewer permissions (covered in the
+    README).
+
+  To run it:
+  Copy-Item .env.example .env   # set MSSQL_SA_PASSWORD and JWT_SIGNING_KEY
+  docker compose up -d --build
+
+> install docker and make the production ready code with dev credentials also
+  the user can login into production as this application will be running on
+  localhost
+
+● I'll check what Docker needs on this machine (winget, WSL2, virtualization)
+  and look at how the API handles logins outside Development.
+
+  Searched for 1 pattern, ran 1 shell command (ctrl+o to expand)
+
+● Docker can't install silently here—WSL2 and the hypervisor aren't enabled, and
+  this shell isn't admin. I'll kick off the installs now (approve the UAC
+  prompts that pop up) while I work on the code changes in parallel.
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+  ⎿  1 skill available
+
+● I'll add an explicit opt-in flag instead of deleting the safeguard. Production
+  still rejects test users by default, and the Docker setup turns the flag on
+  because it runs on localhost.
+
+● Update(Api\src\TaskManagement.Infrastructure\Auth\AuthOptions.cs)
+  ⎿  Added 8 lines, removed 1 line
+       4  /// Users allowed to log in, from configuration section "Auth".
+       5  /// TEMPORARY test users only. They are set per developer with 
+          dotnet user-secrets
+       6  /// (scripts/Set-DevAuthUser.ps1) and never committed. Outside 
+          Development the list is cleared
+       7 -/// at startup (see Program.cs), so a test login can't work on 
+         -a deployed server.                                             
+       7 +/// at startup (see AuthSetup), so a test login can't work on a
+         + deployed server - unless                                      
+       8 +/// <see cref="AllowConfiguredUsersOutsideDevelopment"/> is set
+         + (localhost-only Docker deployment).                           
+       9  /// </summary>
+      10  public sealed class AuthOptions
+      11  {
+      12      public const string SectionName = "Auth";
+      13  
+      14      public List<ConfiguredUser> Users { get; set; } = [];
+      15 +                                                               
+      16 +    /// <summary>                                              
+      17 +    /// Explicit opt-in to keep <see cref="Users"/> outside Dev
+         +elopment. Off by default; only for a                           
+      18 +    /// deployment that is not reachable from other machines (e
+         +.g. docker compose on localhost).                              
+      19 +    /// </summary>                                             
+      20 +    public bool AllowConfiguredUsersOutsideDevelopment { get; s
+         +et; }                                                          
+      21  }
+      22  
+      23  public sealed class ConfiguredUser
+
+● Update(Api\src\TaskManagement.Api\Infrastructure\AuthSetup.cs)
+  ⎿  Added 3 lines, removed 2 lines
+      44              .Build());
+      45  
+      46          // TEMPORARY configured test users are Development-only
+          , so a well-known test login can never
+      47 -        // work on a deployed server, even if someone sets Auth
+         -:Users there by mistake.                                       
+      47 +        // work on a deployed server, even if someone sets Auth
+         +:Users there by mistake. The only exception is                 
+      48 +        // an explicit Auth:AllowConfiguredUsersOutsideDevelopm
+         +ent=true (localhost Docker deployment).                        
+      49          // Checked when the options are first used (not at regi
+          stration), so it always sees the real environment.
+      50          services.AddOptions<AuthOptions>().PostConfigure<IHostE
+          nvironment>((auth, env) =>
+      51          {
+      51 -            if (!env.IsDevelopment())                          
+      52 +            if (!env.IsDevelopment() && !auth.AllowConfiguredUs
+         +ersOutsideDevelopment)                                         
+      53                  auth.Users.Clear();
+      54          });
+      55  
+
+● Update(Api\tests\TaskManagement.Api.IntegrationTests\Auth\AuthTests.cs)
+  ⎿  Added 13 lines
+      141          await IsProblem(response, HttpStatusCode.Unauthorized,
+            ErrorCodes.InvalidCredentials);
+      142      }
+      143  
+      144 +    [Test]                                                    
+      145 +    public async Task Configured_test_users_work_outside_devel
+          +opment_when_explicitly_allowed()                              
+      146 +    {                                                         
+      147 +        await using var production = Factory.WithWebHostBuilde
+          +r(b => b                                                      
+      148 +            .UseEnvironment("Production")                     
+      149 +            .UseSetting("Auth:AllowConfiguredUsersOutsideDevel
+          +opment", "true"));                                            
+      150 +        using var client = production.CreateClient();         
+      151 +                                                              
+      152 +        var response = await client.PostAsJsonAsync(Login, new
+          + { username = Factory.Username, password = Factory.Password })
+          +;                                                             
+      153 +                                                              
+      154 +        Assert.That(response.StatusCode, Is.EqualTo(HttpStatus
+          +Code.OK));                                                    
+      155 +    }                                                         
+      156 +                                                              
+      157      // ---------- Negative: validation ----------
+      158  
+      159      [TestCase("""{ "password": "x" }""", "Username", "Username
+            is required.")]
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● The Docker download is running. Meanwhile I'll run the auth integration tests
+  against the API change.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Your locally running API (PID 1052) locks the Debug binaries. I'll leave it
+  running and build the tests in Release instead.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All 22 auth tests pass, including the new one. Next I'll generate the dev
+  credentials and secrets into .env, using the same password-hash format as
+  Set-DevAuthUser.ps1.
+
+  Made 1 scratchpad edit +35 (ctrl+o to expand)
+
+● Before generating .env, I'll update the template and compose file. The test
+  login gets turned on, and the UI is bound to 127.0.0.1 so only this machine
+  can reach it.
+
+● Update(.env.example)
+  ⎿  Added 5 lines, removed 3 lines
+      12  #   $b = New-Object byte[] 64; [Security.Cryptography.RandomNum
+          berGenerator]::Create().GetBytes($b); [Convert]::ToBase64String
+          ($b)
+      13  JWT_SIGNING_KEY=
+      14  
+      15 -# Production | Development (Development enables the temporary t
+         -est login below)                                               
+      15 +# Production | Development                                     
+      16  ASPNETCORE_ENVIRONMENT=Production
+      17  
+      18 -# Temporary test login, used only when ASPNETCORE_ENVIRONMENT=D
+         -evelopment (see README).                                       
+      18 +# Login user (ASP.NET Core Identity v3 hash, never the plain pa
+         +ssword). Generate with README "Change the login".              
+      19  AUTH_USER_EMAIL=
+      20  AUTH_USER_PASSWORD_HASH=
+      21 +# true = the login above also works in Production. Safe only be
+         +cause the UI is bound to 127.0.0.1 (localhost).                
+      22 +AUTH_ALLOW_CONFIGURED_USERS=true                               
+      23  
+      22 -# Host port for the UI -> http://localhost:8080                
+      24 +# Host port for the UI -> http://localhost:8080 (bound to 127.0
+         +.0.1 only)                                                     
+      25  UI_PORT=8080
+      26  
+      27  # Leave empty: the UI calls /api on its own origin. Set only if
+           the API lives on another domain.
+
+● Update(docker-compose.yml)
+  ⎿  Added 3 lines, removed 1 line
+      51        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Product
+          ion}
+      52        ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      53        Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY i
+          n .env (at least 32 characters)}
+      54 -      # Temporary test login. The API ignores it unless ASPNETC
+         -ORE_ENVIRONMENT=Development.                                   
+      54 +      # Configured login. Outside Development it only works wit
+         +h AUTH_ALLOW_CONFIGURED_USERS=true,                            
+      55 +      # which is acceptable here because the UI port is bound t
+         +o 127.0.0.1 (localhost only).                                  
+      56        Auth__Users__0__Username: ${AUTH_USER_EMAIL:-}
+      57        Auth__Users__0__PasswordHash: ${AUTH_USER_PASSWORD_HASH:-
+          }
+      58 +      Auth__AllowConfiguredUsersOutsideDevelopment: ${AUTH_ALLO
+         +W_CONFIGURED_USERS:-false}                                     
+      59      depends_on:
+      60        migrator:
+      61          condition: service_completed_successfully
+
+● Update(docker-compose.yml)
+  ⎿  Added 2 lines, removed 1 line
+      75          VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+      76      image: task-management/ui:${TAG:-latest}
+      77      ports:
+      78 -      - "${UI_PORT:-8080}:8080"                                
+      78 +      # localhost only: required while the configured login is 
+         +enabled outside Development.                                   
+      79 +      - "127.0.0.1:${UI_PORT:-8080}:8080"                      
+      80      depends_on:
+      81        - api
+      82      security_opt:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● I couldn't generate the secrets myself due to permission restrictions, so I'll
+  add a setup script you can run once to create your own .env file—letting you
+  choose the login password without me ever handling the secrets.
+
+● Write(New-DockerEnv.ps1)
+  ⎿  Wrote 50 lines to New-DockerEnv.ps1
+       1 <#
+       3     Creates .env for docker compose from .env.example: random SQ
+         L Server SA password, random JWT
+       4     signing key, and the login user (password stored only as an
+       5
+       6 .EXAMPLE
+         sword "<your password>"
+       8     ./New-DockerEnv.ps1 -Email "admin@taskmanagement.local" -Pas
+         sword "<new password>" -Force   # replace an existing .env
+      10 param(
+     … +62 lines (ctrl+o to expand)
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● The email check only requires an @, so admin@taskmanagement.local works. Now
+  I'll update the README.
+
+● Update(README.md)
+  ⎿  Added 7 lines, removed 9 lines
+      16  - Docker Desktop (Linux containers) with Compose v2.
+      17  - On Apple Silicon, SQL Server runs under amd64 emulation (turn
+           on Rosetta in Docker Desktop).
+      18  
+      19 -## 1. Configure                                                
+      19 +## 1. Configure (once)                                         
+      20  
+      21 +Create `.env` with your login. The script generates a random SQ
+         +L Server SA password and JWT signing key,                      
+      22 +and stores your password only as a hash:                       
+      23 +                                                               
+      24  ```powershell
+      22 -Copy-Item .env.example .env                                    
+      25 +./New-DockerEnv.ps1 -Email "admin@taskmanagement.local" -Passwo
+         +rd "<choose a password>"                                       
+      26  ```
+      27  
+      25 -Fill in `.env`:                                                
+      28 +If PowerShell blocks the script, first run `Set-ExecutionPolicy
+         + -Scope Process Bypass`.                                       
+      29 +`.env` holds secrets, so never commit or share it.             
+      30  
+      27 -- `MSSQL_SA_PASSWORD`: a strong password (upper, lower, digit a
+         -nd symbol; no `;`).                                            
+      28 -- `JWT_SIGNING_KEY`: at least 32 characters. To generate one:  
+      29 -  ```powershell                                                
+      30 -  $b = New-Object byte[] 64; [Security.Cryptography.RandomNumbe
+         -rGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($
+         -b)                                                             
+      31 -  ```                                                          
+      32 -                                                               
+      31  ## 2. Build and run
+      32  
+      33  ```powershell
+
+● Update(README.md)
+  ⎿  Added 9 lines, removed 13 lines
+      40  
+      41  To stop: `docker compose down`. To also delete the database: `d
+          ocker compose down -v`.
+      42  
+      43 -## Logging in (temporary test users)                           
+      43 +## Logging in                                                  
+      44  
+      45 -The API only accepts the temporary test logins configured under
+         - `Auth:Users`, and **only when `ASPNETCORE_ENVIRONMENT=Developm
+         -ent`**.                                                        
+      46 -That's by design (see `Api/src/TaskManagement.Api/Infrastructur
+         -e/AuthSetup.cs`). With the default `Production` environment,   
+      47 -every login is rejected. To try the app locally:               
+      45 +Log in at http://localhost:8080 with the email and password you
+         + passed to `New-DockerEnv.ps1`.                                
+      46  
+      49 -1. Make a password hash. The existing script stores it in user-
+         -secrets, and you copy it from there:                           
+      50 -   ```powershell                                               
+      51 -   cd Api                                                      
+      52 -   ./scripts/Set-DevAuthUser.ps1 -Username "you@example.com" -P
+         -assword "<test password>"                                      
+      53 -   dotnet user-secrets list --project src/TaskManagement.Api   
+         -# copy Auth:Users:0:PasswordHash                               
+      54 -   ```                                                         
+      55 -2. In `.env`, set `ASPNETCORE_ENVIRONMENT=Development`, `AUTH_U
+         -SER_EMAIL=you@example.com` and `AUTH_USER_PASSWORD_HASH=<hash>`
+         -.                                                              
+      56 -3. Run `docker compose up -d api` to recreate the API.         
+      47 +The API runs in `Production` mode. Normally the API ignores con
+         +figured (`Auth:Users`) logins outside Development.             
+      48 +Compose turns them on with `AUTH_ALLOW_CONFIGURED_USERS=true` (
+         +`Auth__AllowConfiguredUsersOutsideDevelopment`).               
+      49 +That's acceptable **only because the UI is published on `127.0.
+         +0.1`**, so no other machine can reach the app.                 
+      50 +If you ever expose it on a network, set the flag to `false` and
+         + use a real identity store.                                    
+      51  
+      58 -A real production deployment needs a real identity store in pla
+         -ce of these test users.                                        
+      52 +**Change the login:** run `./New-DockerEnv.ps1 -Email ... -Pass
+         +word ... -Force`, then `docker compose up -d`.                 
+      53 +`-Force` also generates a new SA password, but the existing dat
+         +abase volume keeps the old one.                                
+      54 +So either run `docker compose down -v` first (this deletes the 
+         +data), or copy your old `MSSQL_SA_PASSWORD` back into `.env`.  
+      55  
+      56  ## Useful commands
+      57  
+
+● Update(README.md)
+  ⎿  Added 1 line, removed 1 line
+       7  | `sqlserver` | `mssql/server:2022-latest`| Database (data kept
+           in the `sqlserver-data` volume)            | `127.0.0.1:14333`
+           (tools only) |
+       8  | `migrator`  | `Api/Dockerfile` → `migrator` | Applies EF Core
+           migrations + seed data, then exits         | none             
+                     |
+       9  | `api`       | `Api/Dockerfile` → `final`| .NET 8 Web API on p
+          ort 8080, non-root, distroless (chiseled)   | internal only    
+                     |
+      10 -| `ui`        | `Ui/Dockerfile`           | React build served 
+         -by non-root nginx, proxies `/api` → `api`   | `http://localhost
+         -:8080`     |                                                   
+      10 +| `ui`        | `Ui/Dockerfile`           | React build served 
+         +by non-root nginx, proxies `/api` → `api`   | `http://127.0.0.1
+         +:8080`     |                                                   
+      11  
+      12  The browser only talks to nginx, so the UI and API share one or
+          igin and CORS isn't needed.
+      13  
+● Update(README.md)
+  ⎿  Added 5 lines, removed 1 line
+      13  
+      14  ## Prerequisites
+      15  
+      16 -- Docker Desktop (Linux containers) with Compose v2.           
+      16 +- Docker Desktop (Linux containers) with Compose v2, running on
+         + the WSL 2 backend.                                            
+      17 +  - Install from an **administrator** PowerShell: `wsl --instal
+         +l --no-distribution`, then                                     
+      18 +    `winget install -e --id Docker.DockerDesktop`, then reboot.
+      19 +  - Hardware virtualization must be enabled in the BIOS/UEFI.  
+      20 +  - Start Docker Desktop once and wait for "Engine running".   
+      21  - On Apple Silicon, SQL Server runs under amd64 emulation (turn
+           on Rosetta in Docker Desktop).
+      22  
+      23  ## 1. Configure (once)
+
+● The code changes are done. I'll check on the Docker installer.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Docker isn't installed yet. The installer has downloaded and passed its hash
+  check, and is now waiting for you to approve a Windows administrator (UAC)
+  prompt. Check your taskbar if you can't see it.
+
+  After you approve it:
+  1. When the installer asks, keep "Use WSL 2" selected. WSL2 isn't on this
+     machine yet, so the installer will set it up.
+  2. Reboot when asked.
+  3. Start Docker Desktop and wait until it shows "Engine running".
+  4. From C:\Work\Tast_Management_System, run:
+  ./New-DockerEnv.ps1 -Email "admin@taskmanagement.local" -Password "<choose a
+  password>"
+  docker compose up -d --build
+  5. Open http://localhost:8080 and log in with that email and password.
+
+  Your dev login now works in Production too, but only because I added an opt-in
+  setting:
+  - Opt-in flag: a new setting, Auth:AllowConfiguredUsersOutsideDevelopment,
+    defaults to off. The usual rule still applies elsewhere: test logins are
+    ignored outside Development. The change is in AuthSetup.cs
+    (Api/src/TaskManagement.Api/Infrastructure/AuthSetup.cs) and AuthOptions.cs
+    (Api/src/TaskManagement.Infrastructure/Auth/AuthOptions.cs).
+  - Compose: it turns the flag on with AUTH_ALLOW_CONFIGURED_USERS=true. It also
+    publishes the UI on 127.0.0.1 only, so no other machine on your network can
+    reach the app. That's what makes it safe to leave the login on.
+  - Tests: I added an integration test for the flag. All 22 auth tests pass. I
+    ran them in Release because your running local API (PID 1052) locks the
+    Debug build files.
+
+  The dev login and secrets: my attempt to generate them and write .env myself
+  was blocked by the permission system. So I added New-DockerEnv.ps1 for you to
+  run once (step 4 above). It creates a random SQL Server password and a random
+  token-signing key, and stores your login password only as a hash. You choose
+  the password, so I never see it. The README (README.md) covers this, how to
+  change the login, and the install steps.
+
+  When the installer finishes, I'll check that docker is available. I still
+  haven't built the images, so the first docker compose up --build will be their
+  first real test.
+
+● Background command "Install Docker Desktop via winget (UAC prompt)" completed
+(exit code 0)
+
+  Read 1 file (ctrl+o to expand)
+
+● Docker Desktop is now installed: the installer finished with exit code 0, and
+  Docker Desktop.exe and docker.exe are both in place. It can't run containers
+  yet, because WSL2 and the hypervisor weren't enabled on this machine.
+
+  1. Reboot Windows. The installer may have enabled WSL2 and the hypervisor, but
+     they only take effect after a restart.
+  2. Start Docker Desktop. Accept the terms and wait until it shows "Engine
+     running".
+     - If it says WSL is missing or out of date, run wsl --install
+       --no-distribution in an administrator PowerShell, then reboot again.
+     - If it says virtualization is disabled, turn on Intel VT-x or AMD-V in
+       your BIOS/UEFI.
+  3. Open a new terminal so docker is on your PATH, then from
+     C:\Work\Tast_Management_System run:
+  ./New-DockerEnv.ps1 -Email "admin@taskmanagement.local" -Password "<choose a
+  password>"
+  docker compose up -d --build
+  docker compose ps
+  4. Open http://localhost:8080 and log in with that email and password.
+
+  In docker compose ps, migrator should show "exited (0)" and the other services
+  should be running. The images haven't been built yet, so this first build is
+  their first real test. If it fails, send me docker compose logs.
+
+> docker is installed
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Docker's running fine but there's no .env file yet—I'll check both Dockerfiles
+  by building the images directly, since that doesn't require secrets, while
+  you set up the env file.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Both images built successfully. Next I'll build the migrator, since it's the
+  step most likely to fail, then briefly start the UI container with a
+  placeholder upstream to verify the nginx template and health check work.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● I've built and tested everything I can without your secrets.
+
+  ┌────────────────┬────────────────────────────────────────────────────────┐
+  │     Check      │                         Result                         │
+  ├────────────────┼────────────────────────────────────────────────────────┤
+  │ Docker engine  │ 29.8.2, Linux containers, Compose v5.5.1               │
+  ├────────────────┼────────────────────────────────────────────────────────┤
+  │ API image      │ builds (Release publish, minimal no-shell runtime      │
+  │ (final)        │ image)                                                 │
+  ├────────────────┼────────────────────────────────────────────────────────┤
+  │ Migrator image │ builds, including the EF migrations bundle             │
+  │  (migrator)    │                                                        │
+  ├────────────────┼────────────────────────────────────────────────────────┤
+  │ UI image       │ builds (tsc + Vite)                                    │
+  ├────────────────┼────────────────────────────────────────────────────────┤
+  │                │ /healthz returns 200. App routes like /tasks return    │
+  │ UI container,  │ index.html with no-cache. /api/tasks is forwarded with │
+  │ run on its own │  its full path; it returned the expected 502 because   │
+  │                │ no API was running behind it.                          │
+  └────────────────┴────────────────────────────────────────────────────────┘
+
+  Not tested yet: SQL Server, the migrations, the API starting up, and logging
+  in. Those need .env, which doesn't exist yet. I'm not allowed to generate the
+  secrets myself, so please run these two commands from
+  C:\Work\Tast_Management_System:
+
+  ./New-DockerEnv.ps1 -Email "admin@taskmanagement.local" -Password "<choose a
+  password>"
+  docker compose up -d --build
+
+  Then open http://localhost:8080 and log in. The first start takes a minute or
+  two, because SQL Server has to pass its health check and the migrations run
+  before the API starts.
+
+  If PowerShell blocks the script, first run Set-ExecutionPolicy -Scope Process
+  Bypass. Once .env exists, tell me and I'll check docker compose ps and the
+  logs myself.
+
+> for the sql server there is no password and it uses the windows
+  authentication
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● That's correct for your local SQL Server (the MSSQLSERVER service on this
+  machine). The Docker setup doesn't use that server, though. It runs its own
+  separate SQL Server in a container.
+
+  Windows authentication can't work from inside Docker. The containers run
+  Linux, and a Linux container has no Windows identity to log in with. Windows
+  auth into a SQL Server from a container would require an Active Directory
+  domain with Kerberos, which a standalone PC doesn't have. Any container
+  talking to SQL Server has to use a SQL login with a password.
+
+  You don't have to type or remember a password, though. New-DockerEnv.ps1
+  generates a random one and writes it to .env. Your existing database and its
+  Windows login aren't affected. So you have two options:
+
+  1. Keep the containerized SQL Server (my recommendation). Nothing changes. Run
+     ./New-DockerEnv.ps1 -Email ... -Password ... and docker compose up -d
+     --build. The password it asks for is your app login password, not a SQL
+     Server password. The Docker database starts empty except for the seed data
+     from the migrations, and doesn't touch your local TaskManagementDb.
+  2. Use your existing local SQL Server. The containers would connect to
+     host.docker.internal, which is how a container reaches your PC. That
+     requires you to change your SQL Server once:
+     - Turn on SQL Server authentication ("mixed mode") and restart the service.
+     - Enable TCP/IP on port 1433 and allow it through the Windows Firewall.
+     - Create a SQL login with access to TaskManagementDb.
+
+     I'd then remove the sqlserver container from compose and point the
+     connection string at that login. Your Windows login keeps working for your
+     normal dotnet run setup.
+
+  Which do you want? If it's option 2, tell me and I'll update the compose file,
+  .env.example and README. I'll also give you the T-SQL and settings for the
+  SQL Server changes, which you'll need to make as an administrator.
+
+> Keep the containerized SQL Server (my recommendation). Nothing changes. Run
+  ./New-DockerEnv.ps1 -Email ... -Password ... and docker compose up -d
+  --build. The password it asks for is your app login password, not a SQL
+  Server password. The Docker database starts empty except for the seed data
+  from the migrations, and doesn't touch your local TaskManagementDb.
+
+  Read 1 file (ctrl+o to expand)
+
+● The containerized SQL Server stays, so no config changes are needed. .env
+  still doesn't exist, though, and that's the one step you have to do yourself.
+  It contains your login password, and I'm not allowed to choose or handle that.
+
+  In a terminal at C:\Work\Tast_Management_System:
+
+  ./New-DockerEnv.ps1 -Email "admin@taskmanagement.local" -Password "<choose a
+  password>"
+  docker compose up -d --build
+
+  Then tell me it's done. I'll check docker compose ps and the logs for SQL
+  Server, the migrator and the API, and log in to confirm everything works.
+
+> done now what is the username and password the login
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The stack is up, but AUTH_USER_EMAIL in .env is empty. I'll check whether a
+  password hash was set.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The .env file is missing login credentials
+  (AUTH_USER_EMAIL/AUTH_USER_PASSWORD_HASH) since it was hand-filled rather than
+  script-generated. I'll update the script so that when .env already exists, it
+  preserves existing secrets and only adds the login fields, avoiding a
+  password mismatch with the running database.
+
+● Update(New-DockerEnv.ps1)
+  ⎿  Added 9 lines, removed 6 lines
+       1  <#
+       2  .SYNOPSIS
+       3 -    Creates .env for docker compose from .env.example: random S
+         -QL Server SA password, random JWT                              
+       4 -    signing key, and the login user (password stored only as an
+         - ASP.NET Core Identity v3 hash).                               
+       3 +    Creates or updates .env for docker compose. Sets the login 
+         +user (password stored only as an                               
+       4 +    ASP.NET Core Identity v3 hash). A missing SQL Server SA pas
+         +sword or JWT signing key is generated;                         
+       5 +    existing ones are kept, so the running database keeps worki
+         +ng. Use this to change the login too.                          
+       6  
+       7  .EXAMPLE
+       8      ./New-DockerEnv.ps1 -Email "admin@taskmanagement.local" -Pa
+          ssword "<your password>"
+       8 -    ./New-DockerEnv.ps1 -Email "admin@taskmanagement.local" -Pa
+         -ssword "<new password>" -Force   # replace an existing .env    
+       9 +    ./New-DockerEnv.ps1 -Email "admin@taskmanagement.local" -Pa
+         +ssword "<password>" -RegenerateSecrets   # new SA password + JW
+         +T key                                                          
+      10  #>
+      11  param(
+      12      [Parameter(Mandatory)][string]$Email,
+      13      [Parameter(Mandatory)][string]$Password,
+      13 -    [switch]$Force                                             
+      14 +    # New SA password and JWT key. The existing database volume
+         + keeps the old SA password: run `docker compose down -v` first.
+      15 +    [switch]$RegenerateSecrets                                 
+      16  )
+      17  
+      18  $ErrorActionPreference = 'Stop'
+      17 -$template = Join-Path $PSScriptRoot '.env.example'             
+      19  $out = Join-Path $PSScriptRoot '.env'
+      19 -if ((Test-Path $out) -and -not $Force) { throw ".env already ex
+         -ists. Use -Force to overwrite it (the database keeps its old SA
+         - password)." }                                                 
+      20 +$template = if (Test-Path $out) { $out } else { Join-Path $PSSc
+         +riptRoot '.env.example' }                                      
+      21 +$existing = @{}                                                
+      22 +Get-Content $template | Where-Object { $_ -match '^([A-Z_]+)=(.
+         ++)$' } | ForEach-Object { $existing[$Matches[1]] = $Matches[2] 
+         +}                                                              
+      23  
+      24  function RandBytes([int]$n) { $b = New-Object byte[] $n; $r = [
+          Security.Cryptography.RandomNumberGenerator]::Create(); $r.GetB
+          ytes($b); $r.Dispose(); ,$b }
+      25  function RandText([int]$n) { $a = 'ABCDEFGHJKLMNPQRSTUVWXYZabcd
+          efghijkmnpqrstuvwxyz23456789'; -join ((RandBytes $n) | ForEach-
+          Object { $a[$_ % $a.Length] }) }
+
+● Update(New-DockerEnv.ps1)
+  ⎿  Added 2 lines, removed 2 lines
+      41  }
+      42  
+      43  $values = @{
+      44 -    MSSQL_SA_PASSWORD       = 'Sa!' + (RandText 20) + 'x9'   # 
+         -meets SQL Server complexity, no ';'                            
+      45 -    JWT_SIGNING_KEY         = [Convert]::ToBase64String((RandBy
+         -tes 64))                                                       
+      44      AUTH_USER_EMAIL         = $Email.Trim()
+      45      AUTH_USER_PASSWORD_HASH = New-IdentityV3Hash $Password
+      46  }
+      47 +if ($RegenerateSecrets -or -not $existing['MSSQL_SA_PASSWORD'])
+         + { $values.MSSQL_SA_PASSWORD = 'Sa!' + (RandText 20) + 'x9' }  
+         +# meets SQL Server complexity, no ';'                          
+      48 +if ($RegenerateSecrets -or -not $existing['JWT_SIGNING_KEY'])  
+         + { $values.JWT_SIGNING_KEY = [Convert]::ToBase64String((RandByt
+         +es 64)) }                                                      
+      49  $lines = Get-Content $template | ForEach-Object {
+      50      if ($_ -match '^([A-Z_]+)=' -and $values.ContainsKey($Match
+          es[1])) { "$($Matches[1])=$($values[$Matches[1]])" } else { $_ 
+          }
+      51  }
+
+● Update(New-DockerEnv.ps1)
+  ⎿  Added 1 line, removed 1 line
+      50      if ($_ -match '^([A-Z_]+)=' -and $values.ContainsKey($Match
+          es[1])) { "$($Matches[1])=$($values[$Matches[1]])" } else { $_ 
+          }
+      51  }
+      52  [IO.File]::WriteAllLines($out, $lines, (New-Object Text.UTF8Enc
+          oding $false))
+      53 -Write-Host "Created .env. Log in at http://localhost:8080 as '$
+         -($Email.Trim())' with the password you supplied."              
+      53 +Write-Host "Saved .env. Run 'docker compose up -d', then log in
+         + at http://localhost:8080 as '$($Email.Trim())' with the passwo
+         +rd you supplied."                                              
+
+● Update(README.md)
+  ⎿  Added 4 lines, removed 3 lines
+      53  That's acceptable **only because the UI is published on `127.0.
+          0.1`**, so no other machine can reach the app.
+      54  If you ever expose it on a network, set the flag to `false` and
+           use a real identity store.
+      55  
+      56 -**Change the login:** run `./New-DockerEnv.ps1 -Email ... -Pass
+         -word ... -Force`, then `docker compose up -d`.                 
+      57 -`-Force` also generates a new SA password, but the existing dat
+         -abase volume keeps the old one.                                
+      58 -So either run `docker compose down -v` first (this deletes the 
+         -data), or copy your old `MSSQL_SA_PASSWORD` back into `.env`.  
+      56 +**Change the login:** run `./New-DockerEnv.ps1 -Email ... -Pass
+         +word ...` again, then `docker compose up -d`.                  
+      57 +It keeps the existing SA password and JWT key, so the database 
+         +keeps working. Only the login changes.                         
+      58 +To regenerate those secrets as well, add `-RegenerateSecrets`. 
+         +Run `docker compose down -v` first, because                    
+      59 +the existing database volume keeps the old SA password. This de
+         +letes the data.                                                
+      60  
+      61  ## Useful commands
+      62  
+
+● There's no username or password yet. Your .env has the SQL Server password and
+  the JWT key, but no login user (AUTH_USER_EMAIL and AUTH_USER_PASSWORD_HASH
+  are both empty), so nobody can log in. Even once a login exists, I can't tell
+  you its password: the app stores it only as a one-way hash, by design. You
+  choose the password when you run the script.
+
+  The containers themselves are fine: sqlserver and ui are healthy, migrator
+  finished successfully (exit 0) and api is running.
+
+  I changed New-DockerEnv.ps1 so that when .env already exists, it keeps your
+  SQL Server password and JWT key and only sets the login. Your running database
+  is unaffected. Run this in a terminal at C:\Work\Tast_Management_System:
+
+  ./New-DockerEnv.ps1 -Email "admin@taskmanagement.local" -Password "<choose a
+  password>"
+  docker compose up -d
+
+  The second command restarts only the API, which picks up the new login. Then
+  open http://localhost:8080 and log in with:
+  - Username: admin@taskmanagement.local, or whatever email you passed.
+  - Password: whatever you passed to -Password.
+
+  Tell me once it's done and I'll confirm the API picked up the user.
+
+> set password to Test@123
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Now an end-to-end login test through the UI's nginx, exactly as the browser
+  would do it.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● You can log in now. Open http://localhost:8080 and use:
+
+  - Username: admin@taskmanagement.local
+  - Password: Test@123
+
+  I set the login and restarted the API, then tested through the same address
+  the browser uses:
+  - Logging in with Test@123 returns a token.
+  - Loading the task list with that token returns 200, with the seeded tasks
+    from the migrations.
+  - A wrong password is rejected with 401.
+
+  All services are running: sqlserver and ui are healthy, migrator finished, and
+  api is up.
+
+  Test@123 is a weak password. That's acceptable here only because the app is
+  published on 127.0.0.1, so no other machine can reach it. To change the login
+  later, run ./New-DockerEnv.ps1 -Email ... -Password ... again, then docker
+  compose up -d.
+> Update the readme.md file with all the pre-requisite and all details for the
+  new user to setup this project and also mention the userid and password in
+  the readme.md file and all instructions
+
+  Searched for 2 patterns, read 1 file (ctrl+o to expand)
+
+● I have what I need for a full rewrite. I'll write it for a new developer
+  joining the project: Docker quick start with the default login, then local
+  development, then troubleshooting.
+
+● Write(README.md)
+  ⎿  Added 301 lines, removed 51 lines
+        1 -# Task Management System: Docker                              
+        1 +# Task Management System                                      
+        2  
+        3 -The whole stack runs with Docker Compose:                     
+        3 +A task tracker with a **.NET 8 Web API** (Domain-Driven Design
+          +, EF Core, SQL Server) and a **React** front end              
+        4 +(Vite + TypeScript). Users log in, see a filterable task table
+          +, create tasks, and change status and priority inline.        
+        5  
+        5 -| Service     | Image / build             | Purpose           
+          -                                             | Exposed on     
+          -             |                                                
+        6 -|-------------|---------------------------|-------------------
+          ----------------------------------------------|----------------
+          --------------|                                                
+        7 -| `sqlserver` | `mssql/server:2022-latest`| Database (data kep
+          -t in the `sqlserver-data` volume)            | `127.0.0.1:1433
+          -3` (tools only) |                                             
+        8 -| `migrator`  | `Api/Dockerfile` → `migrator` | Applies EF Cor
+          -e migrations + seed data, then exits         | none           
+          -             |                                                
+        9 -| `api`       | `Api/Dockerfile` → `final`| .NET 8 Web API on 
+          -port 8080, non-root, distroless (chiseled)   | internal only  
+          -             |                                                
+       10 -| `ui`        | `Ui/Dockerfile`           | React build served
+          - by non-root nginx, proxies `/api` → `api`   | `http://127.0.0
+          -.1:8080`     |                                                
+        6 +There are two ways to run it:                                 
+        7  
+       12 -The browser only talks to nginx, so the UI and API share one o
+          -rigin and CORS isn't needed.                                  
+        8 +- **[Option A: Docker](#option-a-run-with-docker-recommended)*
+          +* (recommended). Everything runs in containers.               
+        9 +  You only need Docker Desktop.                               
+       10 +- **[Option B: Local development](#option-b-local-development-
+          +without-docker)**. Run the API and UI directly on             
+       11 +  your machine, for coding and debugging.                     
+       12  
+       14 -## Prerequisites                                              
+       13 +---                                                           
+       14  
+       16 -- Docker Desktop (Linux containers) with Compose v2, running o
+          -n the WSL 2 backend.                                          
+       17 -  - Install from an **administrator** PowerShell: `wsl --insta
+          -ll --no-distribution`, then                                   
+       18 -    `winget install -e --id Docker.DockerDesktop`, then reboot
+          -.                                                             
+       19 -  - Hardware virtualization must be enabled in the BIOS/UEFI. 
+       20 -  - Start Docker Desktop once and wait for "Engine running".  
+       21 -- On Apple Silicon, SQL Server runs under amd64 emulation (tur
+          -n on Rosetta in Docker Desktop).                              
+       15 +## Default login                                              
+       16  
+       23 -## 1. Configure (once)                                        
+       17 +| Field    | Value                        |                   
+       18 +|----------|------------------------------|                   
+       19 +| Username | `admin@taskmanagement.local` |                   
+       20 +| Password | `Test@123`                   |                   
+       21  
+       25 -Create `.env` with your login. The script generates a random S
+          -QL Server SA password and JWT signing key,                    
+       26 -and stores your password only as a hash:                      
+       22 +These are **local development credentials**. They work only af
+          +ter you create them with the setup step                       
+       23 +(Docker: [step 3](#3-create-the-configuration-file-env); local
+          + development: [step 3](#3-create-the-dev-login)).             
+       24 +The app is published on `127.0.0.1` only, so no other machine 
+          +can reach it. Never use this login, or this                   
+       25 +configuration, on a server that's reachable from a network.   
+       26  
+       27 +---                                                           
+       28 +                                                              
+       29 +## Project structure                                          
+       30 +                                                              
+       31 +```                                                           
+       32 +Tast_Management_System/                                       
+       33 +├── Api/                                  .NET 8 Web API      
+       34 +│   ├── src/                                                  
+       35 +│   │   ├── TaskManagement.Domain/          entities, value ob
+          +jects, domain rules                                           
+       36 +│   │   ├── TaskManagement.Application/     use cases, validat
+          +ion                                                           
+       37 +│   │   ├── TaskManagement.Infrastructure/  EF Core, SQL Serve
+          +r, migrations, auth                                           
+       38 +│   │   └── TaskManagement.Api/             controllers, Progr
+          +am.cs, appsettings                                            
+       39 +│   ├── tests/                              unit, integration 
+          +and architecture tests                                        
+       40 +│   ├── scripts/Set-DevAuthUser.ps1         creates a dev logi
+          +n for local development                                       
+       41 +│   ├── Dockerfile                          API image + migrat
+          +ion image                                                     
+       42 +│   └── TaskManagement.sln                                    
+       43 +├── Ui/                                   React + Vite + TypeS
+          +cript                                                         
+       44 +│   ├── src/                                                  
+       45 +│   ├── nginx/default.conf.template         nginx config used 
+          +in the Docker image                                           
+       46 +│   └── Dockerfile                                            
+       47 +├── docker-compose.yml                    SQL Server + migrati
+          +ons + API + UI                                                
+       48 +├── .env.example                          template for .env (s
+          +ettings and secrets)                                          
+       49 +├── New-DockerEnv.ps1                     creates .env and the
+          + login user                                                   
+       50 +└── README.md                                                 
+       51 +```                                                           
+       52 +                                                              
+       53 +---                                                           
+       54 +                                                              
+       55 +## Option A: Run with Docker (recommended)                    
+       56 +                                                              
+       57 +### What runs                                                 
+       58 +                                                              
+       59 +| Service     | What it does                                  
+          +                      | Reachable at                       |  
+       60 +|-------------|-----------------------------------------------
+          +----------------------|------------------------------------|  
+       61 +| `sqlserver` | SQL Server 2022 (Developer edition). Data kept
+          + in a Docker volume   | `localhost,14333` (SQL tools only) |  
+       62 +| `migrator`  | Creates/updates the database schema and seed d
+          +ata, then exits       | none                               |  
+       63 +| `api`       | .NET 8 Web API on port 8080                   
+          +                      | internal only (through the UI)     |  
+       64 +| `ui`        | React app served by nginx. Forwards `/api/*` t
+          +o the API             | **http://localhost:8080**          |  
+       65 +                                                              
+       66 +This SQL Server runs inside Docker and is **separate from any 
+          +SQL Server installed on your PC**.                            
+       67 +It uses an `sa` password, which the setup script generates for
+          + you. Windows authentication isn't possible                   
+       68 +from Linux containers. Your local databases aren't affected.  
+       69 +                                                              
+       70 +### Prerequisites                                             
+       71 +                                                              
+       72 +| Requirement                 | Notes |                       
+       73 +|-----------------------------|-------|                       
+       74 +| Windows 10/11 64-bit        | Pro, Enterprise, Home and Work
+          +stations editions all work. macOS and Linux work too, apart fr
+          +om the PowerShell setup script. |                             
+       75 +| Hardware virtualization     | Must be enabled in BIOS/UEFI (
+          +Intel VT-x / AMD-V). Check in Task Manager → Performance → CPU
+          + → "Virtualization: Enabled". |                               
+       76 +| WSL 2                       | In an **administrator** PowerS
+          +hell: `wsl --install --no-distribution`, then reboot. |       
+       77 +| Docker Desktop              | `winget install -e --id Docker
+          +.DockerDesktop` (approve the admin prompt), or download it fro
+          +m docker.com. Keep "Use WSL 2" selected. Reboot. |            
+       78 +| ~4 GB free RAM, ~5 GB disk  | SQL Server needs at least 2 GB
+          + of RAM. |                                                    
+       79 +| Free ports                  | `8080` (UI) and `14333` (SQL t
+          +ools). Both can be changed in `.env`. |                       
+       80 +                                                              
+       81 +After installing, **start Docker Desktop** and wait for **"Eng
+          +ine running"** (bottom left of the Docker Desktop window).    
+       82 +Then open a **new** terminal and check:                       
+       83 +                                                              
+       84  ```powershell
+       29 -./New-DockerEnv.ps1 -Email "admin@taskmanagement.local" -Passw
+          -ord "<choose a password>"                                     
+       85 +docker version                                                
+       86 +docker compose version                                        
+       87  ```
+       88  
+       32 -If PowerShell blocks the script, first run `Set-ExecutionPolic
+          -y -Scope Process Bypass`.                                     
+       33 -`.env` holds secrets, so never commit or share it.            
+       89 +You don't need the .NET SDK, Node.js or SQL Server for Option 
+          +A. Everything builds inside Docker.                           
+       90  
+       35 -## 2. Build and run                                           
+       91 +### 1. Get the code                                           
+       92  
+       93 +Copy or clone the project folder, for example to `C:\Work\Tast
+          +_Management_System`, and open a PowerShell terminal there:    
+       94 +                                                              
+       95  ```powershell
+       96 +cd C:\Work\Tast_Management_System                             
+       97 +```                                                           
+       98 +                                                              
+       99 +### 2. Allow the setup script to run (current terminal only)  
+      100 +                                                              
+      101 +```powershell                                                 
+      102 +Set-ExecutionPolicy -Scope Process Bypass                     
+      103 +```                                                           
+      104 +                                                              
+      105 +### 3. Create the configuration file (.env)                   
+      106 +                                                              
+      107 +```powershell                                                 
+      108 +./New-DockerEnv.ps1 -Email "admin@taskmanagement.local" -Passw
+          +ord "Test@123"                                                
+      109 +```                                                           
+      110 +                                                              
+      111 +This creates `.env` with:                                     
+      112 +                                                              
+      113 +- `MSSQL_SA_PASSWORD`: random SQL Server `sa` password (genera
+          +ted).                                                         
+      114 +- `JWT_SIGNING_KEY`: random key used to sign login tokens (gen
+          +erated).                                                      
+      115 +- `AUTH_USER_EMAIL` and `AUTH_USER_PASSWORD_HASH`: the login. 
+          +The password is stored only as a hash.                        
+      116 +                                                              
+      117 +`.env` contains secrets. **Don't commit it or share it.** Othe
+          +r settings (ports, image tag, environment) are                
+      118 +documented in [.env.example](.env.example).                   
+      119 +                                                              
+      120 +### 4. Build and start                                        
+      121 +                                                              
+      122 +```powershell                                                 
+      123  docker compose up -d --build
+       39 -docker compose ps                 # migrator should show "exit
+          -ed (0)", the rest "running/healthy"                           
+       40 -docker compose logs -f api        # follow API logs           
+      124  ```
+      125  
+       43 -Open **http://localhost:8080**.                               
+      126 +The first run downloads base images and builds everything, whi
+          +ch takes about 3 to 10 minutes. Check the status:             
+      127  
+       45 -To stop: `docker compose down`. To also delete the database: `
+          -docker compose down -v`.                                      
+      128 +```powershell                                                 
+      129 +docker compose ps                                             
+      130 +```                                                           
+      131  
+       47 -## Logging in                                                 
+      132 +Expected result:                                              
+      133  
+       49 -Log in at http://localhost:8080 with the email and password yo
+          -u passed to `New-DockerEnv.ps1`.                              
+      134 +| SERVICE     | STATUS              |                         
+      135 +|-------------|---------------------|                         
+      136 +| `sqlserver` | Up (healthy)        |                         
+      137 +| `migrator`  | Exited (0)          |                         
+      138 +| `api`       | Up                  |                         
+      139 +| `ui`        | Up (healthy)        |                         
+      140  
+       51 -The API runs in `Production` mode. Normally the API ignores co
+          -nfigured (`Auth:Users`) logins outside Development.           
+       52 -Compose turns them on with `AUTH_ALLOW_CONFIGURED_USERS=true` 
+          -(`Auth__AllowConfiguredUsersOutsideDevelopment`).             
+       53 -That's acceptable **only because the UI is published on `127.0
+          -.0.1`**, so no other machine can reach the app.               
+       54 -If you ever expose it on a network, set the flag to `false` an
+          -d use a real identity store.                                  
+      141 +`migrator` showing **Exited (0)** is correct. It runs once to 
+          +set up the database, then stops.                              
+      142  
+       56 -**Change the login:** run `./New-DockerEnv.ps1 -Email ... -Pas
+          -sword ...` again, then `docker compose up -d`.                
+       57 -It keeps the existing SA password and JWT key, so the database
+          - keeps working. Only the login changes.                       
+       58 -To regenerate those secrets as well, add `-RegenerateSecrets`.
+          - Run `docker compose down -v` first, because                  
+       59 -the existing database volume keeps the old SA password. This d
+          -eletes the data.                                              
+      143 +### 5. Open the app                                           
+      144  
+       61 -## Useful commands                                            
+      145 +Go to **http://localhost:8080** and log in with the [default l
+          +ogin](#default-login):                                        
+      146 +`admin@taskmanagement.local` / `Test@123`.                    
+      147  
+      148 +### Everyday Docker commands                                  
+      149 +                                                              
+      150  ```powershell
+       64 -docker compose build --no-cache api              # rebuild a s
+          -ingle image                                                   
+       65 -docker compose run --rm migrator                 # re-run migr
+          -ations after adding one                                       
+       66 -docker compose up -d --build ui                  # rebuild and
+          - redeploy only the UI                                         
+       67 -docker build -t task-management/api ./Api        # build an im
+          -age without compose                                           
+      151 +docker compose up -d                     # start (after a rebo
+          +ot or `down`)                                                 
+      152 +docker compose down                      # stop and remove con
+          +tainers (data is kept)                                        
+      153 +docker compose down -v                   # stop AND delete the
+          + database                                                     
+      154 +docker compose ps                        # status             
+      155 +docker compose logs -f api               # follow API logs (al
+          +so: ui, sqlserver, migrator)                                  
+      156 +docker compose up -d --build             # rebuild after code 
+          +changes                                                       
+      157 +docker compose up -d --build ui          # rebuild only the UI
+      158 +docker compose run --rm migrator         # apply new EF Core m
+          +igrations                                                     
+      159  ```
+      160  
+       70 -To connect with SSMS or Azure Data Studio, use `localhost,1433
+          -3` with user `sa` and your `MSSQL_SA_PASSWORD`.               
+      161 +### Change the login                                          
+      162  
+      163 +```powershell                                                 
+      164 +./New-DockerEnv.ps1 -Email "someone@example.com" -Password "<n
+          +ew password>"                                                 
+      165 +docker compose up -d                                          
+      166 +```                                                           
+      167 +                                                              
+      168 +This keeps the existing SQL Server password and JWT key, so yo
+          +ur data stays. Only the login changes.                        
+      169 +To regenerate those secrets too, run `docker compose down -v` 
+          +(**this deletes the data**), then run the script              
+      170 +with `-RegenerateSecrets`.                                    
+      171 +                                                              
+      172 +### Connect to the Docker database (optional)                 
+      173 +                                                              
+      174 +In SSMS or Azure Data Studio:                                 
+      175 +                                                              
+      176 +- **Server:** `localhost,14333`                               
+      177 +- **Authentication:** SQL Server Authentication               
+      178 +- **Login:** `sa`                                             
+      179 +- **Password:** the `MSSQL_SA_PASSWORD` value in `.env`       
+      180 +- **Options:** tick "Trust server certificate"                
+      181 +                                                              
+      182 +### How login works in Docker                                 
+      183 +                                                              
+      184 +The API runs in `Production` mode. Normally the API ignores co
+          +nfigured logins outside `Development`.                        
+      185 +`.env` turns them back on with `AUTH_ALLOW_CONFIGURED_USERS=tr
+          +ue`.                                                          
+      186 +That's safe only because the UI port is bound to `127.0.0.1`. 
+          +If you ever publish the app on a network,                     
+      187 +set it to `false` and use a real identity provider.           
+      188 +                                                              
+      189 +---                                                           
+      190 +                                                              
+      191 +## Option B: Local development (without Docker)               
+      192 +                                                              
+      193 +Use this to run and debug the code in Visual Studio or VS Code
+          + with hot reload.                                             
+      194 +                                                              
+      195 +### Prerequisites                                             
+      196 +                                                              
+      197 +| Requirement             | Version / notes |                 
+      198 +|-------------------------|-----------------|                 
+      199 +| .NET SDK                | **8.0.425 or later 8.0.x** (pinned
+          + in `Api/global.json`). `winget install Microsoft.DotNet.SDK.8
+          +` |                                                           
+      200 +| Node.js                 | **20.19+ / 22.12+ / 24.x** (Vite 8
+          +). `winget install OpenJS.NodeJS.LTS` |                       
+      201 +| SQL Server              | Local default instance (`localhost
+          +`) with **Windows authentication**. Developer or Express editi
+          +on. |                                                         
+      202 +| IDE (optional)          | Visual Studio 2022 17.8+, VS Code,
+          + or JetBrains Rider |                                         
+      203 +                                                              
+      204 +Check:                                                        
+      205 +                                                              
+      206 +```powershell                                                 
+      207 +dotnet --version                                              
+      208 +node --version                                                
+      209 +```                                                           
+      210 +                                                              
+      211 +### 1. Trust the HTTPS development certificate (once)         
+      212 +                                                              
+      213 +```powershell                                                 
+      214 +dotnet dev-certs https --trust                                
+      215 +```                                                           
+      216 +                                                              
+      217 +### 2. Database                                               
+      218 +                                                              
+      219 +The API uses `Server=localhost;Database=TaskManagementDb;Trust
+          +ed_Connection=True` (see                                      
+      220 +`Api/src/TaskManagement.Api/appsettings.json`). In Development
+          +, the database is **created and migrated                      
+      221 +automatically** when the API starts. You don't need to create 
+          +it yourself.                                                  
+      222 +                                                              
+      223 +To apply migrations manually instead:                         
+      224 +                                                              
+      225 +```powershell                                                 
+      226 +cd Api                                                        
+      227 +dotnet tool restore                                           
+      228 +dotnet ef database update --project src/TaskManagement.Infrast
+          +ructure --startup-project src/TaskManagement.Api              
+      229 +```                                                           
+      230 +                                                              
+      231 +### 3. Create the dev login                                   
+      232 +                                                              
+      233 +This stores the login and a JWT signing key in .NET **user-sec
+          +rets** (outside the repository):                              
+      234 +                                                              
+      235 +```powershell                                                 
+      236 +cd Api                                                        
+      237 +Set-ExecutionPolicy -Scope Process Bypass                     
+      238 +./scripts/Set-DevAuthUser.ps1 -Username "admin@taskmanagement.
+          +local" -Password "Test@123"                                   
+      239 +```                                                           
+      240 +                                                              
+      241 +### 4. Run the API                                            
+      242 +                                                              
+      243 +```powershell                                                 
+      244 +cd Api                                                        
+      245 +dotnet run --project src/TaskManagement.Api --launch-profile h
+          +ttps                                                          
+      246 +```                                                           
+      247 +                                                              
+      248 +- API: https://localhost:7213 (also http://localhost:5008)    
+      249 +- Swagger: https://localhost:7213/swagger (Development only)  
+      250 +                                                              
+      251 +### 5. Run the UI (second terminal)                           
+      252 +                                                              
+      253 +```powershell                                                 
+      254 +cd Ui                                                         
+      255 +npm install                                                   
+      256 +npm run dev                                                   
+      257 +```                                                           
+      258 +                                                              
+      259 +Open **http://localhost:5173** and log in with `admin@taskmana
+          +gement.local` / `Test@123`.                                   
+      260 +                                                              
+      261 +The Vite dev server forwards `/api` to `https://localhost:7213
+          +` (set in `Ui/.env.development`).                             
+      262 +If you run the API with the `http` profile, change `API_PROXY_
+          +TARGET` to `http://localhost:5008`.                           
+      263 +                                                              
+      264 +### Tests and checks                                          
+      265 +                                                              
+      266 +```powershell                                                 
+      267 +cd Api                                                        
+      268 +dotnet test                 # all test projects               
+      269 +cd ../Ui                                                      
+      270 +npm run lint                                                  
+      271 +npm run build               # type-check + production build   
+      272 +```                                                           
+      273 +                                                              
+      274 +If the API is already running from Visual Studio, `dotnet test
+          +` may fail with "file is locked". Stop the API,               
+      275 +or run `dotnet test -c Release`.                              
+      276 +                                                              
+      277 +---                                                           
+      278 +                                                              
+      279 +## API endpoints                                              
+      280 +                                                              
+      281 +All endpoints except login need an `Authorization: Bearer <tok
+          +en>` header.                                                  
+      282 +                                                              
+      283 +| Method | Path                 | Description                 
+          +        |                                                     
+      284 +|--------|----------------------|-----------------------------
+          +--------|                                                     
+      285 +| POST   | `/api/auth/login`    | Log in with `{ username, pas
+          +sword }` and get an `accessToken` |                           
+      286 +| GET    | `/api/tasks`         | List tasks (paging and filte
+          +rs)     |                                                     
+      287 +| GET    | `/api/tasks/summary` | Task counts                 
+          +        |                                                     
+      288 +| GET    | `/api/tasks/{id}`    | Get one task                
+          +        |                                                     
+      289 +| POST   | `/api/tasks`         | Create a task               
+          +        |                                                     
+      290 +| PUT    | `/api/tasks/{id}`    | Update a task (status, prior
+          +ity, …) |                                                     
+      291 +| DELETE | `/api/tasks/{id}`    | Delete a task               
+          +        |                                                     
+      292 +                                                              
+      293 +Quick test against the Docker setup:                          
+      294 +                                                              
+      295 +```powershell                                                 
+      296 +$t = (Invoke-RestMethod -Method Post http://localhost:8080/api
+          +/auth/login -ContentType application/json `                   
+      297 +      -Body '{"username":"admin@taskmanagement.local","passwor
+          +d":"Test@123"}').accessToken                                  
+      298 +Invoke-RestMethod http://localhost:8080/api/tasks -Headers @{ 
+          +Authorization = "Bearer $t" }                                 
+      299 +```                                                           
+      300 +                                                              
+      301 +---                                                           
+      302 +                                                              
+      303 +## Troubleshooting                                            
+      304 +                                                              
+      305 +| Problem | Fix |                                             
+      306 +|---------|-----|                                             
+      307 +| `docker` is not recognized | Start Docker Desktop, then open
+          + a **new** terminal. Docker adds itself to PATH at install tim
+          +e. |                                                          
+      308 +| Docker Desktop: "WSL 2 is not installed" / "Virtualization n
+          +ot enabled" | Run `wsl --install --no-distribution` as adminis
+          +trator and reboot. Enable VT-x/AMD-V in BIOS. |               
+      309 +| `New-DockerEnv.ps1 cannot be loaded … running scripts is dis
+          +abled` | Run `Set-ExecutionPolicy -Scope Process Bypass` in th
+          +e same terminal. |                                            
+      310 +| `Set MSSQL_SA_PASSWORD in .env` (or `JWT_SIGNING_KEY`) | `.e
+          +nv` is missing or incomplete. Run `New-DockerEnv.ps1` (step 3)
+          +. |                                                           
+      311 +| Login says invalid email or password | `AUTH_USER_EMAIL`/`AU
+          +TH_USER_PASSWORD_HASH` in `.env` are empty or wrong. Re-run `N
+          +ew-DockerEnv.ps1`, then `docker compose up -d`. |             
+      312 +| `migrator` shows `Exited (1)` | `docker compose logs migrato
+          +r`. Usually the SA password in `.env` doesn't match the existi
+          +ng volume (after `-RegenerateSecrets`). Either restore the old
+          + password, or run `docker compose down -v` (deletes data). |  
+      313 +| `sqlserver` keeps restarting | Give Docker at least 2 GB RAM
+          + (Settings → Resources). Check `docker compose logs sqlserver`
+          +. |                                                           
+      314 +| Port 8080 or 14333 already in use | Set `UI_PORT` / `SQL_POR
+          +T` in `.env` to a free port, then `docker compose up -d`. |   
+      315 +| UI loads but shows "Unable to reach the server" | `docker co
+          +mpose ps`: is `api` up? Then `docker compose logs api`. |     
+      316 +| Local dev: API can't connect to SQL Server | Make sure the `
+          +MSSQLSERVER` Windows service is running and your Windows user 
+          +can log in to it. |                                           
+      317 +| Local dev: browser warns about the certificate | `dotnet dev
+          +-certs https --trust`, then restart the browser. |            
+      318 +                                                              
+      319 +---                                                           
+      320 +                                                              
+      321  ## Production notes
+      322  
+       74 -- **TLS:** the containers speak plain HTTP. Put a TLS-terminat
+          -ing reverse proxy or load balancer in front of `ui:8080`.     
+       75 -  It forwards `X-Forwarded-*` headers, which the API honours. 
+       76 -- **Database:** for production, use a managed SQL Server or Az
+          -ure SQL. Point `ConnectionStrings__Default` at it with a      
+       77 -  least-privilege login rather than `sa`, and remove the `sqls
+          -erver` service and its published port.                        
+       78 -- **Secrets:** keep `.env` out of source control. In an orches
+          -trator, use its secret store (Docker/K8s secrets, Key Vault). 
+       79 -- **Images:** tag releases with `$env:TAG = "1.2.3"; docker co
+          -mpose build` (or set `TAG` in `.env`), then push `task-managem
+          -ent/*` to your registry.                                      
+       80 -- **API on another domain:** if the UI and API aren't served f
+          -rom the same origin, build the UI with                        
+       81 -  `VITE_API_BASE_URL=https://api.example.com` and add that UI 
+          -origin to the API's `Cors__AllowedOrigins__0`.                
+      323 +This setup is hardened for a **single machine on localhost**: 
+          +non-root containers, a minimal API image,                     
+      324 +a read-only API filesystem, secrets kept in `.env`, and the da
+          +tabase not reachable from outside the machine.                
+      325 +Before deploying to a real server:                            
+      326 +                                                              
+      327 +- Replace the configured login with a real identity provider a
+          +nd set `AUTH_ALLOW_CONFIGURED_USERS=false`.                   
+      328 +- Put a TLS-terminating reverse proxy or load balancer in fron
+          +t of the `ui` service. The containers speak plain HTTP.       
+      329 +- Use a managed SQL Server or Azure SQL with a least-privilege
+          + login instead of `sa`, and remove the `sqlserver` service.   
+      330 +- Keep secrets in a secret store (Docker/Kubernetes secrets, A
+          +zure Key Vault) instead of `.env`.                            
+      331 +- Tag and push images: `$env:TAG = "1.0.0"; docker compose bui
+          +ld`, then push `task-management/*` to your registry.          
+
+● I'll check that the README's endpoint list matches the controllers.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Written for: a developer new to the project, setting it up from scratch on
+  their own machine.
+
+  I've rewritten README.md as a complete setup guide, and the default login is
+  near the top: admin@taskmanagement.local / Test@123.
+
+  What it covers:
+  - Default login: the username and password, with a note that they're for local
+    use only and must be created during setup before they work.
+  - Project structure: what each folder and key file is for.
+  - Option A, Docker (recommended):
+    - Prerequisites: virtualization, WSL 2, Docker Desktop, RAM and ports, plus
+      how to check each one.
+    - Setup steps: get the code, allow the script to run, create .env, build and
+      start, then open the app and log in.
+    - What a healthy docker compose ps looks like, everyday commands, how to
+      change the login, and how to connect SSMS to the Docker database.
+  - Option B, local development without Docker: .NET 8 SDK, Node.js, and your
+    local SQL Server with Windows authentication. Steps for the HTTPS
+    certificate, the database (migrated automatically), the dev login with
+    Test@123, and running the API and UI on ports 7213 and 5173.
+  - API endpoints, checked against the controllers, plus a PowerShell snippet to
+    test login.
+  - Troubleshooting: a table of the problems we hit in this session and other
+    common ones.
+  - Production notes: what to change before putting it on a real server.
+
+  The password in the README only works once a new developer runs the setup
+  command in the guide. Nothing in the repository contains the login itself, and
+  .env stays private on each machine.
+
+  Test@123 is fine for a localhost-only setup. Anyone who can read the README
+  knows it, though, so don't reuse it anywhere that matters.

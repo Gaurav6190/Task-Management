@@ -1,0 +1,26 @@
+.select {
+  width: 100%;
+  max-width: 160px;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--text);
+  background: var(--input-bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* A filter other than "All" is in use. */
+.active {
+  font-weight: 600;
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}

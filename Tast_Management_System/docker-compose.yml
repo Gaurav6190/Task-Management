@@ -1,0 +1,92 @@
+# Task Management System: SQL Server + migrations + .NET 8 API + React UI (nginx).
+# Usage: copy .env.example to .env, fill in the secrets, then `docker compose up -d --build`.
+name: task-management
+
+x-db-connection: &db-connection
+  ConnectionStrings__Default: "Server=sqlserver,1433;Database=${DB_NAME:-TaskManagementDb};User Id=sa;Password=${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env};TrustServerCertificate=True;MultipleActiveResultSets=true;Application Name=TaskManagement.Api"
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}
+      MSSQL_PID: ${MSSQL_PID:-Developer}
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    ports:
+      # Bound to localhost only, for SSMS / Azure Data Studio. Remove to keep the DB fully private.
+      - "127.0.0.1:${SQL_PORT:-14333}:1433"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' -b -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    networks: [backend]
+
+  # One-shot: applies EF Core migrations (incl. seed data), then exits. The API waits for it.
+  migrator:
+    build:
+      context: ./Api
+      target: migrator
+    image: task-management/migrator:${TAG:-latest}
+    environment:
+      <<: *db-connection
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: "no"
+    networks: [backend]
+
+  api:
+    build:
+      context: ./Api
+      target: final
+    image: task-management/api:${TAG:-latest}
+    environment:
+      <<: *db-connection
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env (at least 32 characters)}
+      # Configured login. Outside Development it only works with AUTH_ALLOW_CONFIGURED_USERS=true,
+      # which is acceptable here because the UI port is bound to 127.0.0.1 (localhost only).
+      Auth__Users__0__Username: ${AUTH_USER_EMAIL:-}
+      Auth__Users__0__PasswordHash: ${AUTH_USER_PASSWORD_HASH:-}
+      Auth__AllowConfiguredUsersOutsideDevelopment: ${AUTH_ALLOW_CONFIGURED_USERS:-false}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    networks: [backend, frontend]
+    # Not published to the host: the UI's nginx proxies /api to it on the internal network.
+
+  ui:
+    build:
+      context: ./Ui
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+    image: task-management/ui:${TAG:-latest}
+    ports:
+      # localhost only: required while the configured login is enabled outside Development.
+      - "127.0.0.1:${UI_PORT:-8080}:8080"
+    depends_on:
+      - api
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    networks: [frontend]
+
+networks:
+  backend:
+  frontend:
+
+volumes:
+  sqlserver-data:

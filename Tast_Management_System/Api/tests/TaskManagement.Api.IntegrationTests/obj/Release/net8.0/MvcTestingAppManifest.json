@@ -1,0 +1,6 @@
+{
+  "TaskManagement.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Work\\Tast_Management_System\\Api\\src\\TaskManagement.Api",
+  "TaskManagement.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Work\\Tast_Management_System\\Api\\src\\TaskManagement.Application",
+  "TaskManagement.Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Work\\Tast_Management_System\\Api\\src\\TaskManagement.Domain",
+  "TaskManagement.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Work\\Tast_Management_System\\Api\\src\\TaskManagement.Infrastructure"
+}

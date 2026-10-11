@@ -1,0 +1,75 @@
+{
+  "expectations": [
+    {
+      "text": "Vite + React + TypeScript project (vite, react, typescript deps; tsconfig; src/main.tsx)",
+      "passed": true,
+      "evidence": "vite=^8.3.0 react=^19.2.8 typescript=~6.0.2"
+    },
+    {
+      "text": "ESLint is the linter (eslint dep, eslint.config.*, lint script runs eslint, no oxlint)",
+      "passed": true,
+      "evidence": "eslint=^10.12.0 config=eslint.config.js lint=\"eslint .\" oxlint=absent"
+    },
+    {
+      "text": "npm run lint passes with no errors",
+      "passed": true,
+      "evidence": "> task-management-ui@0.0.0 lint | > eslint ."
+    },
+    {
+      "text": "npm run build (tsc -b + vite build) passes",
+      "passed": true,
+      "evidence": "computing gzip size... | dist/index.html                   0.46 kB │ gzip:  0.29 kB | dist/assets/index-CWGyUrCH.css    2.43 kB │ gzip:  0.96 kB | dist/assets/index-DlVnItv1.js   264.09 kB │ gzip: 84.08 kB |  | ✓ built in 220ms"
+    },
+    {
+      "text": "Username input uses type=\"email\"",
+      "passed": true,
+      "evidence": "src/pages/LoginPage.tsx"
+    },
+    {
+      "text": "Client-side email validation before submitting (pattern/validator in code)",
+      "passed": true,
+      "evidence": "src/auth/email.ts, src/pages/LoginPage.tsx"
+    },
+    {
+      "text": "Whitespace is stripped or trimmed from the username input",
+      "passed": true,
+      "evidence": "src/auth/email.ts"
+    },
+    {
+      "text": "Username limited to 256 characters (matches API validator)",
+      "passed": true,
+      "evidence": "src/auth/email.ts"
+    },
+    {
+      "text": "Login POSTs to /api/auth/login",
+      "passed": true,
+      "evidence": "src/api/auth.ts"
+    },
+    {
+      "text": "Dev setup avoids the API CORS mismatch (Vite /api proxy, or https on :5173)",
+      "passed": true,
+      "evidence": "https dev server on 5173"
+    },
+    {
+      "text": "Access token from the response is kept and sent as a Bearer header",
+      "passed": false,
+      "evidence": "accessToken in: src/api/auth.ts, src/auth/session.ts; Bearer in: -"
+    },
+    {
+      "text": "Handles 401 / invalid credentials with a message",
+      "passed": true,
+      "evidence": "src/api/client.ts"
+    },
+    {
+      "text": "Has a /tasks page reached after login, with a logout button",
+      "passed": true,
+      "evidence": "tasks: src/App.tsx, src/pages/LoginPage.tsx; logout: src/auth/AuthContext.ts, src/auth/AuthProvider.tsx, src/pages/TasksPage.tsx"
+    }
+  ],
+  "summary": {
+    "passed": 12,
+    "failed": 1,
+    "total": 13,
+    "pass_rate": 0.92
+  }
+}

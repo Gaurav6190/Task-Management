@@ -1,0 +1,26 @@
+.icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon[data-priority='Low'] {
+  color: var(--priority-low-fg);
+}
+
+.icon[data-priority='Medium'] {
+  color: var(--priority-medium-fg);
+}
+
+.icon[data-priority='High'] {
+  color: var(--priority-high-fg);
+}
+
+.icon[data-priority='Critical'] {
+  color: var(--priority-critical-fg);
+}

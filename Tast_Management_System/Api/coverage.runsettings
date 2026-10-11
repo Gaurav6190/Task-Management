@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Code coverage settings (coverlet). Usage: see Specs.md "Code coverage". -->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <!-- Production assemblies only; test assemblies are never measured. -->
+          <Include>[TaskManagement.Domain]*,[TaskManagement.Application]*,[TaskManagement.Infrastructure]*,[TaskManagement.Api]*</Include>
+          <!-- EF-generated migration code and model snapshot are not hand-written logic. -->
+          <ExcludeByFile>**/Persistence/Migrations/*.cs</ExcludeByFile>
+          <!-- Do NOT exclude CompilerGeneratedAttribute: async methods compile to generated state machines,
+               so excluding it silently drops every async method from the report. -->
+          <ExcludeByAttribute>GeneratedCodeAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+          <SkipAutoProps>true</SkipAutoProps>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

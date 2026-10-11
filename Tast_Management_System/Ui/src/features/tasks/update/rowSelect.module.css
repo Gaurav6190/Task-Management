@@ -1,0 +1,90 @@
+/*
+ * Shared by StatusSelect and PrioritySelect: an editor inside a table row (filters live in the header).
+ * Each dropdown is tinted by its current value via data-status / data-priority, so the table can be
+ * scanned by colour while the text label still carries the meaning.
+ */
+.select {
+  --select-fg: var(--text);
+  --select-bg: var(--input-bg);
+  --select-border: var(--border-strong);
+
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--select-fg);
+  background: var(--select-bg);
+  border: 1px solid var(--select-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+/* The open list always uses neutral colours, so every option is readable. */
+.select option {
+  font-weight: 400;
+  color: var(--text);
+  background: var(--surface);
+}
+
+.select[data-status='ToDo'] {
+  --select-fg: var(--status-todo-fg);
+  --select-bg: var(--status-todo-bg);
+  --select-border: var(--status-todo-border);
+}
+
+.select[data-status='InProgress'] {
+  --select-fg: var(--status-progress-fg);
+  --select-bg: var(--status-progress-bg);
+  --select-border: var(--status-progress-border);
+}
+
+.select[data-status='Done'] {
+  --select-fg: var(--status-done-fg);
+  --select-bg: var(--status-done-bg);
+  --select-border: var(--status-done-border);
+}
+
+.select[data-priority='Low'] {
+  --select-fg: var(--priority-low-fg);
+  --select-bg: var(--priority-low-bg);
+  --select-border: var(--priority-low-border);
+}
+
+.select[data-priority='Medium'] {
+  --select-fg: var(--priority-medium-fg);
+  --select-bg: var(--priority-medium-bg);
+  --select-border: var(--priority-medium-border);
+}
+
+.select[data-priority='High'] {
+  --select-fg: var(--priority-high-fg);
+  --select-bg: var(--priority-high-bg);
+  --select-border: var(--priority-high-border);
+}
+
+.select[data-priority='Critical'] {
+  --select-fg: var(--priority-critical-fg);
+  --select-bg: var(--priority-critical-bg);
+  --select-border: var(--priority-critical-border);
+}
+
+.select:hover:not(:disabled) {
+  border-color: var(--select-fg);
+}
+
+.select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.select:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.select[aria-invalid='true'] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 1px var(--danger);
+}

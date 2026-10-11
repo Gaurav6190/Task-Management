@@ -1,0 +1,74 @@
+/*
+ * Light theme only (D5). The app no longer follows the OS dark mode, so the status and priority
+ * colours below always sit on the light surfaces they were chosen for.
+ * Every *-fg colour meets WCAG AA (4.5:1) on its matching *-bg.
+ */
+:root {
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --input-bg: #ffffff;
+  --text: #101828;
+  --text-muted: #475467;
+  --border: #e4e7ec;
+  --border-strong: #d0d5dd;
+  --accent: #2f5bd3;
+  --accent-hover: #264bb2;
+  --accent-contrast: #ffffff;
+  --danger: #b42318;
+  --danger-bg: #fef3f2;
+  --success: #067647;
+  --shadow: 0 1px 2px rgb(16 24 40 / 0.06), 0 12px 32px rgb(16 24 40 / 0.1);
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.05), 0 1px 3px rgb(16 24 40 / 0.04);
+  --shadow-card-hover: 0 4px 12px rgb(16 24 40 / 0.08);
+  --chip-bg: #f2f4f7;
+  --skeleton: #eaecf0;
+  --row-hover: #f9fafb;
+  --backdrop: rgb(16 24 40 / 0.45);
+
+  /* Status: grey -> blue -> green, following the workflow. */
+  --status-todo-fg: #344054;
+  --status-todo-bg: #f2f4f7;
+  --status-todo-border: #d0d5dd;
+  --status-progress-fg: #175cd3;
+  --status-progress-bg: #eff8ff;
+  --status-progress-border: #b2ddff;
+  --status-done-fg: #067647;
+  --status-done-bg: #ecfdf3;
+  --status-done-border: #abefc6;
+
+  /* Priority: cool grey -> violet -> orange -> red, rising in urgency (T5). */
+  --priority-low-fg: #475467;
+  --priority-low-bg: #f2f4f7;
+  --priority-low-border: #d0d5dd;
+  --priority-medium-fg: #5925dc;
+  --priority-medium-bg: #f4f3ff;
+  --priority-medium-border: #d9d6fe;
+  --priority-high-fg: #b93815;
+  --priority-high-bg: #fef6ee;
+  --priority-high-border: #f9dbaf;
+  --priority-critical-fg: #b42318;
+  --priority-critical-bg: #fef3f2;
+  --priority-critical-border: #fda29b;
+  /* Row tint for Critical tasks, and its hover. */
+  --priority-critical-row: #fffbfa;
+  --priority-critical-row-hover: #fef3f2;
+
+  color-scheme: light;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--bg);
+}

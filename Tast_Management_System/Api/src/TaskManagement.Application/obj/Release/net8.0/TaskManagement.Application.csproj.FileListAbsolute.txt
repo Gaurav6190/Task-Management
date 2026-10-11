@@ -1,0 +1,15 @@
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\bin\Release\net8.0\TaskManagement.Application.deps.json
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\bin\Release\net8.0\TaskManagement.Application.dll
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\bin\Release\net8.0\TaskManagement.Application.pdb
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\bin\Release\net8.0\TaskManagement.Domain.dll
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\bin\Release\net8.0\TaskManagement.Domain.pdb
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\obj\Release\net8.0\TaskManagement.Application.csproj.AssemblyReference.cache
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\obj\Release\net8.0\TaskManagement.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\obj\Release\net8.0\TaskManagement.Application.AssemblyInfoInputs.cache
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\obj\Release\net8.0\TaskManagement.Application.AssemblyInfo.cs
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\obj\Release\net8.0\TaskManagement.Application.csproj.CoreCompileInputs.cache
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\obj\Release\net8.0\TaskMana.B5C26166.Up2Date
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\obj\Release\net8.0\TaskManagement.Application.dll
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\obj\Release\net8.0\refint\TaskManagement.Application.dll
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\obj\Release\net8.0\TaskManagement.Application.pdb
+C:\Work\Tast_Management_System\Api\src\TaskManagement.Application\obj\Release\net8.0\ref\TaskManagement.Application.dll

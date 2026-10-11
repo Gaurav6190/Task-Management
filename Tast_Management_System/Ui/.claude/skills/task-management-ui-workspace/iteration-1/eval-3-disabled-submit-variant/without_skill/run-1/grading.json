@@ -1,0 +1,75 @@
+{
+  "expectations": [
+    {
+      "text": "Vite + React + TypeScript project (vite, react, typescript deps; tsconfig; src/main.tsx)",
+      "passed": true,
+      "evidence": "vite=^8.3.0 react=^19.2.8 typescript=~6.0.2"
+    },
+    {
+      "text": "ESLint is the linter (eslint dep, eslint.config.*, lint script runs eslint, no oxlint)",
+      "passed": true,
+      "evidence": "eslint=^10.12.0 config=eslint.config.js lint=\"eslint .\" oxlint=absent"
+    },
+    {
+      "text": "npm run lint passes with no errors",
+      "passed": true,
+      "evidence": "> task-management-ui@0.0.0 lint | > eslint ."
+    },
+    {
+      "text": "npm run build (tsc -b + vite build) passes",
+      "passed": true,
+      "evidence": "computing gzip size... | dist/index.html                   0.47 kB │ gzip:  0.31 kB | dist/assets/index-DIirWQnp.css    2.25 kB │ gzip:  0.91 kB | dist/assets/index-B56Czm6P.js   224.12 kB │ gzip: 70.34 kB |  | ✓ built in 192ms"
+    },
+    {
+      "text": "Username input uses type=\"email\"",
+      "passed": true,
+      "evidence": "src/pages/LoginPage.tsx"
+    },
+    {
+      "text": "Client-side email validation before submitting (pattern/validator in code)",
+      "passed": true,
+      "evidence": "src/pages/LoginPage.tsx, src/pages/loginValidation.ts"
+    },
+    {
+      "text": "Whitespace is stripped or trimmed from the username input",
+      "passed": true,
+      "evidence": "src/pages/LoginPage.tsx, src/pages/loginValidation.ts"
+    },
+    {
+      "text": "Username limited to 256 characters (matches API validator)",
+      "passed": true,
+      "evidence": "src/pages/loginValidation.ts"
+    },
+    {
+      "text": "Login POSTs to /api/auth/login",
+      "passed": true,
+      "evidence": "src/api/auth.ts"
+    },
+    {
+      "text": "Dev setup avoids the API CORS mismatch (Vite /api proxy, or https on :5173)",
+      "passed": true,
+      "evidence": "vite /api proxy"
+    },
+    {
+      "text": "Access token from the response is kept and sent as a Bearer header",
+      "passed": true,
+      "evidence": "accessToken in: src/api/auth.ts, src/auth/session.ts; Bearer in: src/auth/session.ts"
+    },
+    {
+      "text": "Handles 401 / invalid credentials with a message",
+      "passed": true,
+      "evidence": "src/api/auth.ts, src/pages/LoginPage.tsx"
+    },
+    {
+      "text": "Sign in button is disabled until both fields are valid",
+      "passed": true,
+      "evidence": "src/pages/LoginPage.tsx"
+    }
+  ],
+  "summary": {
+    "passed": 13,
+    "failed": 0,
+    "total": 13,
+    "pass_rate": 1
+  }
+}
